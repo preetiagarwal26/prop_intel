@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-Real estate investors are unable to get a consolidated view of their portfolio. This is due to the fact that investors manage their properties :
+Rental real estate investors are unable to get a consolidated view of their portfolio. This is due to the fact that investors manage their properties :
 
 1. By employing different property managers in different markets and each property would typically use a different software.
 2. By themselves.
@@ -14,9 +14,7 @@ This means that investors need to log into multi websites and their own excel sh
 
 The objective of this project is to build a web based application that can help investors aggregate information from different property management softwares,  documents, and spreadsheets to build a consolidated view of an investor's real estate portfolio.
 
-
-
-# Real Estate Portfolio Aggregation Platform – Requirements
+# Real Estate Portfolio Aggregation Platform – High Level Requirements
 
 ## 1. Product Overview
 
@@ -24,15 +22,15 @@ The objective of this project is to build a web based application that can help 
 
 Build a web-based application that aggregates, normalizes, and visualizes real estate portfolio data across:
 
-* Property management systems (PMS)
-* Self-managed spreadsheets
-* Documents (leases, compliance, insurance, etc.)
+- Property management systems (PMS)
+- Self-managed spreadsheets
+- Documents (leases, compliance, insurance, etc.)
 
 ### Core Value Proposition
 
-* Single source of truth for portfolio performance
-* Automated monitoring of risks and required actions
-* Reduction of manual tracking (Excel, logins, emails)
+- Single source of truth for portfolio performance
+- Automated monitoring of risks and required actions
+- Reduction of manual tracking (Excel, logins, emails)
 
 ---
 
@@ -40,14 +38,13 @@ Build a web-based application that aggregates, normalizes, and visualizes real e
 
 ### Primary Users
 
-* Individual real estate investors (small to mid-size portfolios)
-* Semi-professional investors (multi-market, mixed management)
+- Individual real estate investors (small to mid-size portfolios)
+- Semi-professional investors (multi-market, mixed management)
 
 ### Secondary Users
 
-* Asset managers
-* Property managers (limited access)
-* Accountants / analysts
+- Property managers (limited access)
+- Accountants / analysts
 
 ---
 
@@ -61,21 +58,28 @@ The system must support ingestion from:
 
 #### A. Property Management Software (PMS)
 
-* API integrations (preferred)
-* CSV exports (fallback)
-* Email ingestion (statements, reports)
+- API integrations (preferred)
+- CSV exports (fallback if API integration is not available)
+- Email ingestion (statements, reports)
+- Web scraping (fallback if API integration is not available)
 
-#### B. Spreadsheets
+#### B. Documents
 
-* Excel / Google Sheets upload
-* Scheduled sync (Google Sheets API)
-* Template-based parsing + flexible mapping
+- PDF or image uploads through the app 
+  - rental lease 
+  - Sale contract
+  - mortgage statement
+  - utilities bills - water, gas, electricity, internet
+  - Compliance notices - fire inspection, lead certification, certificate of occupancy, rental license
+- Ability to receive an email with attachments that include document listed above
 
-#### C. Documents
+#### C. Spreadsheets
 
-* PDF, DOCX uploads
-* Email attachments ingestion
-* OCR + document classification
+- Excel / Google Sheets upload
+- Scheduled sync (Google Sheets API)
+- Template-based parsing + flexible mapping
+
+
 
 ---
 
@@ -87,20 +91,20 @@ Standardize inconsistent data across sources into a unified schema.
 
 ### Core Entities
 
-* Property
-* Unit (for multi-family)
-* Tenant
-* Lease
-* Payment / Rent
-* Expense
-* Document
-* Alert / Issue
+- Property
+- Unit (for multi-family)
+- Tenant
+- Lease
+- Payment / Rent
+- Expense
+- Document
+- Alert / Issue
 
 ### Examples of Normalization
 
-* “Unit #2A” vs “Apt 2A” → standardized Unit ID
-* Rent frequency (weekly/monthly) normalized to monthly equivalent
-* Different lease formats mapped into structured lease fields
+- “Unit #2A” vs “Apt 2A” → standardized Unit ID
+- Rent frequency (weekly/monthly) normalized to monthly equivalent
+- Different lease formats mapped into structured lease fields
 
 ---
 
@@ -108,18 +112,18 @@ Standardize inconsistent data across sources into a unified schema.
 
 ### Overview Metrics
 
-* Total portfolio value (manual + API-fed)
-* Monthly rental income (actual vs expected)
-* Occupancy rate
-* Delinquency rate
-* NOI (if expenses available)
+- Total portfolio value (manual + API-fed)
+- Monthly rental income (actual vs expected)
+- Occupancy rate
+- Delinquency rate
+- NOI (if expenses available)
 
 ### Drill-Down Views
 
-* By property
-* By market
-* By property manager
-* By unit
+- By property
+- By market
+- By property manager
+- By unit
 
 ---
 
@@ -127,17 +131,17 @@ Standardize inconsistent data across sources into a unified schema.
 
 ### Property Summary
 
-* Address, type, acquisition date
-* Property manager (if applicable)
-* Ownership structure
+- Address, type, acquisition date
+- Property manager (if applicable)
+- Ownership structure
 
 ### Unit-Level Data (if multi-family)
 
-* Unit number
-* Tenant name
-* Lease start/end
-* Current rent
-* Payment status
+- Unit number
+- Tenant name
+- Lease start/end
+- Current rent
+- Payment status
 
 ---
 
@@ -145,16 +149,16 @@ Standardize inconsistent data across sources into a unified schema.
 
 ### Features
 
-* Expected vs received rent
-* Late payments tracking
-* Partial payments
-* Historical payment trends
+- Expected vs received rent
+- Late payments tracking
+- Partial payments
+- Historical payment trends
 
 ### Alerts
 
-* Rent overdue (configurable thresholds)
-* Chronic late payer flag
-* Missing payment data from PMS
+- Rent overdue (configurable thresholds)
+- Chronic late payer flag
+- Missing payment data from PMS
 
 ---
 
@@ -162,16 +166,16 @@ Standardize inconsistent data across sources into a unified schema.
 
 ### Lease Data Extraction
 
-* Lease start/end dates
-* Rent amount
-* Security deposit
-* Renewal terms
+- Lease start/end dates
+- Rent amount
+- Security deposit
+- Renewal terms
 
 ### Features
 
-* Lease expiration alerts
-* Renewal tracking
-* Rent escalation tracking
+- Lease expiration alerts
+- Renewal tracking
+- Rent escalation tracking
 
 ---
 
@@ -179,10 +183,10 @@ Standardize inconsistent data across sources into a unified schema.
 
 ### Tenant Profiles
 
-* Name, contact info
-* Lease association
-* Payment history
-* Communication log (optional future feature)
+- Name, contact info
+- Lease association
+- Payment history
+- Communication log (optional future feature)
 
 ---
 
@@ -190,24 +194,24 @@ Standardize inconsistent data across sources into a unified schema.
 
 ### Supported Documents
 
-* Leases
-* Inspection certificates
-* Permits
-* Insurance certificates
-* HOA documents
-* Tax documents
+- Leases
+- Inspection certificates
+- Permits
+- Insurance certificates
+- HOA documents
+- Tax documents
 
 ### Features
 
-* Tagging (property, unit, tenant, type)
-* OCR + metadata extraction
-* Expiry tracking
+- Tagging (property, unit, tenant, type)
+- OCR + metadata extraction
+- Expiry tracking
 
 ### Alerts
 
-* Expiring insurance
-* Missing compliance documents
-* Upcoming inspections
+- Expiring insurance
+- Missing compliance documents
+- Upcoming inspections
 
 ---
 
@@ -217,27 +221,27 @@ Standardize inconsistent data across sources into a unified schema.
 
 Examples:
 
-* Rent overdue
-* Lease expiring in X days
-* Insurance expiring
-* Missing document
-* Vacancy > threshold
-* Data sync failure
+- Rent overdue
+- Lease expiring in X days
+- Insurance expiring
+- Missing document
+- Vacancy > threshold
+- Data sync failure
 
 ### Alert Features
 
-* Severity levels (info, warning, critical)
-* Custom rules (user-defined thresholds)
-* Notifications (email, SMS, in-app)
+- Severity levels (info, warning, critical)
+- Custom rules (user-defined thresholds)
+- Notifications (email, SMS, in-app)
 
 ---
 
 ## 3.10 Expense & Financial Tracking (Optional MVP+)
 
-* Expense ingestion (PMS or manual)
-* Categorization (repairs, taxes, utilities)
-* NOI calculation
-* CapEx tracking
+- Expense ingestion (PMS or manual)
+- Categorization (repairs, taxes, utilities)
+- NOI calculation
+- CapEx tracking
 
 ---
 
@@ -245,18 +249,18 @@ Examples:
 
 ### 4.1 PMS Integrations
 
-* Build abstraction layer for multiple systems
-* API-based connectors
-* Fallback: CSV ingestion
+- Build abstraction layer for multiple systems
+- API-based connectors
+- Fallback: CSV ingestion
 
 ### 4.2 Email Integration
 
-* Dedicated inbox for ingestion
-* Auto-classification of attachments
+- Dedicated inbox for ingestion
+- Auto-classification of attachments
 
 ### 4.3 Cloud Storage
 
-* Google Drive / Dropbox sync (documents)
+- Google Drive / Dropbox sync (documents)
 
 ---
 
@@ -264,20 +268,20 @@ Examples:
 
 ### 5.1 ETL Pipeline
 
-* Extract (API, file, email)
-* Transform (mapping + normalization)
-* Load (central database)
+- Extract (API, file, email)
+- Transform (mapping + normalization)
+- Load (central database)
 
 ### 5.2 Data Mapping UI
 
-* User maps fields from spreadsheet → system schema
-* Save reusable templates
+- User maps fields from spreadsheet → system schema
+- Save reusable templates
 
 ### 5.3 Data Quality Handling
 
-* Missing data flags
-* Conflict resolution rules
-* Versioning / audit trail
+- Missing data flags
+- Conflict resolution rules
+- Versioning / audit trail
 
 ---
 
@@ -285,35 +289,37 @@ Examples:
 
 ### 6.1 Onboarding
 
-* Guided setup:
-
-  * Add properties
-  * Connect PMS
-  * Upload spreadsheets
-  * Upload documents
+- Guided setup:
+  - Add properties
+  - Connect PMS
+  - Upload spreadsheets
+  - Upload documents
 
 ### 6.2 Navigation
 
-* Portfolio → Property → Unit hierarchy
-* Global search (property, tenant, document)
+- Portfolio → Property → Unit hierarchy
+- Global search (property, tenant, document)
 
 ### 6.3 Customization
 
-* Custom dashboards
-* Custom alerts
-* Custom tags (markets, strategies, etc.)
+- Custom dashboards
+- Custom alerts
+- Custom tags (markets, strategies, etc.)
 
 ### 6.4 Dashboard
+
 The dashboard should show:
+
 - the list of properties owned by the investor
 - for each property items that need attention. Examples of items that need attention include:
-    - Rent delayed
-    - Mortgage payment due soon
-    - Smoke alarm inspection due
-    - Any county or city inspection due
-    - Insurance payment due
+  - Rent delayed
+  - Mortgage payment due soon
+  - Smoke alarm inspection due
+  - Any county or city inspection due
+  - Insurance payment due
 
 ### 6.5 Document Vault
+
 Application should maintain a document vault. For each property in the dashboard, the application should show a list of documents for that property. Examples of documents for a property include:
     - Title
     - Compliance documents including (Lead Paint inspection, fire safety inspection, Rental License, etc)
@@ -324,11 +330,11 @@ Application should maintain a document vault. For each property in the dashboard
 
 ## 7. Security & Compliance
 
-* Role-based access control
-* Data encryption (at rest + in transit)
-* Audit logs
-* Secure document storage
-* Optional 2FA
+- Role-based access control
+- Data encryption (at rest + in transit)
+- Audit logs
+- Secure document storage
+- Optional 2FA
 
 ---
 
@@ -336,17 +342,17 @@ Application should maintain a document vault. For each property in the dashboard
 
 ### Performance
 
-* Dashboard load < 2 seconds
-* Near real-time sync for APIs
+- Dashboard load < 2 seconds
+- Near real-time sync for APIs
 
 ### Scalability
 
-* Support portfolios from 1 → 1,000+ units
+- Support portfolios from 1 → 1,000+ units
 
 ### Reliability
 
-* 99.9% uptime target
-* Graceful degradation if integrations fail
+- 99.9% uptime target
+- Graceful degradation if integrations fail
 
 ---
 
@@ -354,38 +360,35 @@ Application should maintain a document vault. For each property in the dashboard
 
 ### Frontend
 
-* React / Next.js web app
+- React / Next.js web app
 
 ### Backend
 
-* API layer (Python)
-* Microservices for:
-
-  * Ingestion
-  * Normalization
-  * Alerts
+- API layer (Python)
+- Microservices for:
+  - Ingestion
+  - Normalization
+  - Alerts
 
 ### Data Layer
 
-* Relational DB (PostgreSQL)
-* Document storage (S3 or equivalent)
+- Relational DB (PostgreSQL)
+- Document storage (S3 or equivalent)
 
 ### Processing
 
-* Background jobs (queue-based)
-* OCR + NLP for documents
+- Background jobs (queue-based)
+- OCR + NLP for documents
 
 ---
 
 ## 10. Future Enhancements
 
-* AI-driven insights (e.g., “this property underperforms similar assets”)
-* Predictive vacancy / delinquency
-* Automated underwriting for new deals
-* Integration with accounting tools
-* Mobile app
+- AI-driven insights (e.g., “this property underperforms similar assets”)
+- Predictive vacancy / delinquency
+- Automated underwriting for new deals
+- Integration with accounting tools
+- Mobile app
 
 ---
-
-
 
