@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Confirmed - PropIntel</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f7f5;
+      --card: #ffffff;
+      --text: #1b4332;
+      --muted: #52796f;
+      --accent: #1b4332;
+      --error: #b00020;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f1a14;
+        --card: #16261d;
+        --text: #d8f3dc;
+        --muted: #95b8a4;
+        --accent: #52b788;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Segoe UI, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+    .card {
+      width: min(480px, 100%);
+      background: var(--card);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+    h1 { margin: 0 0 12px; font-size: 1.6rem; }
+    p { margin: 0 0 12px; color: var(--muted); line-height: 1.5; }
+    .status { font-size: 3rem; margin-bottom: 12px; }
+    .hidden { display: none; }
+    .error { color: var(--error); }
+    code {
+      display: block;
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.05);
+      font-size: 0.85rem;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="success" class="hidden">
+      <div class="status">✓</div>
+      <h1>Email confirmed</h1>
+      <p>Your account is verified. Close this tab and sign in to the Real Estate Portfolio app.</p>
+    </div>
+    <div id="error" class="hidden">
+      <div class="status error">✕</div>
+      <h1>Confirmation failed</h1>
+      <p id="error-message">The confirmation link is invalid or has expired.</p>
+      <p>Request a new confirmation email from the app or Supabase dashboard.</p>
+    </div>
+    <div id="loading">
+      <div class="status">…</div>
+      <h1>Confirming your email</h1>
+      <p>Please wait while we finish verification.</p>
+    </div>
+    <code id="debug" class="hidden"></code>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const error = params.get('error') || hash.get('error');
+    const errorDescription = params.get('error_description') || hash.get('error_description');
+    const accessToken = hash.get('access_token');
+    const type = hash.get('type');
+
+    const show = (id) => {
+      ['loading', 'success', 'error'].forEach((section) => {
+        document.getElementById(section).classList.toggle('hidden', section !== id);
+      });
+    };
+
+    if (error) {
+      show('error');
+      document.getElementById('error-message').textContent =
+        decodeURIComponent((errorDescription || error).replace(/\+/g, ' '));
+    } else if (accessToken || type === 'signup' || type === 'email_change') {
+      show('success');
+    } else if (window.location.hash.length <= 1 && window.location.search.length <= 1) {
+      show('success');
+      document.querySelector('#success p').textContent =
+        'If you arrived here from your confirmation email, your account should be ready. Sign in to the app.';
+    } else {
+      show('loading');
+      setTimeout(() => show('success'), 800);
+    }
+  </script>
+</body>
+</html>

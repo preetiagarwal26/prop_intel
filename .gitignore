@@ -1,4 +1,10 @@
 !.env.example
+*.iml
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
 *.pyc
 .DS_Store
 .env
