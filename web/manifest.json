@@ -1,6 +1,6 @@
 {
-    "name": "real_estate_portfolio",
-    "short_name": "real_estate_portfolio",
+    "name": "prop_intel",
+    "short_name": "prop_intel",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

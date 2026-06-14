@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:real_estate_portfolio/core/utils/address_normalizer.dart';
-import 'package:real_estate_portfolio/services/property_matching_service.dart';
-import 'package:real_estate_portfolio/data/models/lease_extraction.dart';
-import 'package:real_estate_portfolio/data/models/property.dart';
-import 'package:real_estate_portfolio/services/pdf_extraction_service.dart';
+import 'package:prop_intel/core/utils/address_normalizer.dart';
+import 'package:prop_intel/services/property_matching_service.dart';
+import 'package:prop_intel/data/models/lease_extraction.dart';
+import 'package:prop_intel/data/models/property.dart';
+import 'package:prop_intel/services/pdf_extraction_service.dart';
 
 void main() {
   test('address normalizer standardizes abbreviations', () {

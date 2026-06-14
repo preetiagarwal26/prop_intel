@@ -1,4 +1,4 @@
-package com.realestate.portfolio.real_estate_portfolio
+package com.realestate.portfolio.prop_intel
 
 import io.flutter.embedding.android.FlutterActivity
 

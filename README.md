@@ -109,7 +109,7 @@ This must exactly match a URL in Supabase **Redirect URLs**.
 In a **second terminal** (keep the Flutter app running in the first):
 
 ```powershell
-cd c:\GitRepos\REAL-ESTATE-PORTFOLIO\web
+cd c:\GitRepos\prop_intel\web
 python -m http.server 3000
 ```
 

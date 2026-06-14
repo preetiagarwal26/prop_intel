@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = real_estate_portfolio
+PRODUCT_NAME = prop_intel
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.realestate.portfolio.realEstatePortfolio
+PRODUCT_BUNDLE_IDENTIFIER = com.realestate.portfolio.prop_intel
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 com.realestate.portfolio. All rights reserved.

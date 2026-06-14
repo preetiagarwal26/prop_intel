@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/real_estate_portfolio.iml" filepath="$PROJECT_DIR$/real_estate_portfolio.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/real_estate_portfolio_android.iml" filepath="$PROJECT_DIR$/android/real_estate_portfolio_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/prop_intel.iml" filepath="$PROJECT_DIR$/prop_intel.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/prop_intel_android.iml" filepath="$PROJECT_DIR$/android/prop_intel_android.iml" />
     </modules>
   </component>
 </project>

@@ -23,8 +23,8 @@ Host the **Flutter web app** + email confirmation page on Vercel. Supabase (data
 If not already on GitHub:
 
 ```powershell
-cd c:\GitRepos\REAL-ESTATE-PORTFOLIO
-git remote add origin https://github.com/YOUR_USER/REAL-ESTATE-PORTFOLIO.git
+cd c:\GitRepos\prop_intel
+git remote add origin https://github.com/YOUR_USER/prop_intel.git
 git push -u origin main
 ```
 
@@ -33,7 +33,7 @@ git push -u origin main
 ## Step 2 — Import project in Vercel
 
 1. Go to [vercel.com/new](https://vercel.com/new)
-2. **Import** your GitHub repo `REAL-ESTATE-PORTFOLIO`
+2. **Import** your GitHub repo `prop_intel`
 3. Vercel reads `vercel.json` automatically — leave defaults
 4. **Do not deploy yet** — add environment variables first (Step 3)
 
@@ -53,7 +53,7 @@ Project → **Settings** → **Environment Variables**. Add for **Production** (
 
 Example after first deploy:
 ```
-AUTH_REDIRECT_URL=https://real-estate-portfolio.vercel.app/confirm.html
+AUTH_REDIRECT_URL=https://prop_intel.vercel.app/confirm.html
 ```
 
 ---
@@ -121,7 +121,7 @@ Then update:
 ## Local web preview (before deploying)
 
 ```powershell
-cd c:\GitRepos\REAL-ESTATE-PORTFOLIO
+cd c:\GitRepos\prop_intel
 flutter build web --release
 copy web\confirm.html build\web\confirm.html
 cd build\web

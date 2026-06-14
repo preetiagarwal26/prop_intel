@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.realestate.portfolio" "\0"
-            VALUE "FileDescription", "real_estate_portfolio" "\0"
+            VALUE "FileDescription", "prop_intel" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "real_estate_portfolio" "\0"
+            VALUE "InternalName", "prop_intel" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.realestate.portfolio. All rights reserved." "\0"
-            VALUE "OriginalFilename", "real_estate_portfolio.exe" "\0"
-            VALUE "ProductName", "real_estate_portfolio" "\0"
+            VALUE "OriginalFilename", "prop_intel.exe" "\0"
+            VALUE "ProductName", "prop_intel" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
