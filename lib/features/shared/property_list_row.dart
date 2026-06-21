@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../data/repositories/supabase_repository.dart';
 import '../../services/property_status_service.dart';
 import 'property_status_pill.dart';
@@ -36,7 +37,7 @@ class PropertyListRow extends StatelessWidget {
               height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
+                color: AppColors.surface2,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -69,7 +70,7 @@ class PropertyListRow extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(rentLabel, style: theme.textTheme.titleSmall),
+                  Text(rentLabel, style: theme.textTheme.titleSmall?.copyWith(color: AppColors.success)),
                   Text(
                     'rent',
                     style: theme.textTheme.labelSmall?.copyWith(

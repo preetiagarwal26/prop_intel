@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../data/models/document_flag.dart';
 import '../../data/models/document_type.dart';
 
@@ -94,16 +95,16 @@ dynamic metadataValueFromString(String key, String text) {
 
 Color flagSeverityColor(DocumentFlagSeverity severity) {
   return switch (severity) {
-    DocumentFlagSeverity.info => const Color(0xFF52796F),
-    DocumentFlagSeverity.warning => const Color(0xFFB85C1A),
-    DocumentFlagSeverity.critical => const Color(0xFF8B2020),
+    DocumentFlagSeverity.info => AppColors.success,
+    DocumentFlagSeverity.warning => AppColors.warn,
+    DocumentFlagSeverity.critical => AppColors.danger,
   };
 }
 
 Color flagSeverityBackground(DocumentFlagSeverity severity) {
   return switch (severity) {
-    DocumentFlagSeverity.info => const Color(0xFFEAF3DE),
-    DocumentFlagSeverity.warning => const Color(0xFFFAEEDA),
-    DocumentFlagSeverity.critical => const Color(0xFFFCEBEB),
+    DocumentFlagSeverity.info => AppColors.successBg,
+    DocumentFlagSeverity.warning => AppColors.warnBg,
+    DocumentFlagSeverity.critical => AppColors.dangerBg,
   };
 }

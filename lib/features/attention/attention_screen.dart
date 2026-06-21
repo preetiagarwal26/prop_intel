@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/providers/app_providers.dart';
+import '../../core/theme/app_colors.dart';
 import '../../data/models/action_item.dart';
 import '../shared/action_item_tile.dart';
+import '../shared/app_shell.dart';
 
 class AttentionScreen extends ConsumerWidget {
   const AttentionScreen({super.key});
@@ -32,14 +34,15 @@ class AttentionScreen extends ConsumerWidget {
     final attentionAsync = ref.watch(attentionProvider);
     final dateFormat = DateFormat.yMMMd();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Needs Attention'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard'),
-        ),
+    return AppShell(
+      currentNav: AppNav.attention,
+      title: 'Needs Attention',
+      subtitle: attentionAsync.maybeWhen(
+        data: (items) =>
+            items.isEmpty ? 'All caught up' : '${items.length} item(s) need your attention',
+        orElse: () => null,
       ),
+      actions: const [PropVaultTopActions()],
       body: attentionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -69,7 +72,7 @@ class AttentionScreen extends ConsumerWidget {
                     Icon(
                       Icons.check_circle_outline,
                       size: 64,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: AppColors.success,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -88,25 +91,20 @@ class AttentionScreen extends ConsumerWidget {
           }
 
           return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text(
-                '${items.length} item(s) need your attention',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              ...items.map(
-                (item) => ActionItemTile(
-                  item: item,
-                  dateFormat: dateFormat,
-                  onTap: item.propertyId != null
-                      ? () => context.push('/property/${item.propertyId}')
-                      : null,
-                  onMarkDone: () => _updateStatus(ref, item, ActionItemStatus.done),
-                  onDismiss: () => _updateStatus(ref, item, ActionItemStatus.dismissed),
-                ),
-              ),
-            ],
+            padding: EdgeInsets.zero,
+            children: items
+                .map(
+                  (item) => ActionItemTile(
+                    item: item,
+                    dateFormat: dateFormat,
+                    onTap: item.propertyId != null
+                        ? () => context.push('/property/${item.propertyId}')
+                        : null,
+                    onMarkDone: () => _updateStatus(ref, item, ActionItemStatus.done),
+                    onDismiss: () => _updateStatus(ref, item, ActionItemStatus.dismissed),
+                  ),
+                )
+                .toList(),
           );
         },
       ),

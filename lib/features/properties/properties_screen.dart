@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/providers/app_providers.dart';
+import '../../core/theme/app_colors.dart';
 import '../../data/repositories/supabase_repository.dart';
 import '../../services/property_status_service.dart';
+import '../shared/app_shell.dart';
+import '../shared/prop_vault_card.dart';
 import '../shared/property_status_pill.dart';
 
 class PropertiesScreen extends ConsumerWidget {
@@ -17,19 +20,17 @@ class PropertiesScreen extends ConsumerWidget {
     final statusService = ref.watch(propertyStatusServiceProvider);
     final currency = NumberFormat.simpleCurrency();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Properties'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard'),
-        ),
+    return AppShell(
+      currentNav: AppNav.properties,
+      title: 'My Properties',
+      subtitle: portfolioAsync.maybeWhen(
+        data: (entries) {
+          final docCount = entries.fold<int>(0, (sum, e) => sum + e.documents.length);
+          return '${entries.length} assets · $docCount documents';
+        },
+        orElse: () => null,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/upload'),
-        icon: const Icon(Icons.upload_file),
-        label: const Text('Upload Document'),
-      ),
+      actions: const [PropVaultTopActions()],
       body: portfolioAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Failed to load properties: $error')),
@@ -37,8 +38,6 @@ class PropertiesScreen extends ConsumerWidget {
           if (entries.isEmpty) {
             return const Center(child: Text('No properties yet. Upload a document to get started.'));
           }
-
-          final docCount = entries.fold<int>(0, (sum, e) => sum + e.documents.length);
 
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -51,18 +50,7 @@ class PropertiesScreen extends ConsumerWidget {
               return CustomScrollView(
                 slivers: [
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: Text(
-                        '${entries.length} propert${entries.length == 1 ? 'y' : 'ies'} · $docCount document${docCount == 1 ? '' : 's'}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                      ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+                    padding: const EdgeInsets.only(bottom: 16),
                     sliver: SliverGrid(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: crossAxisCount,
@@ -120,37 +108,30 @@ class _PropertyGridCard extends StatelessWidget {
         ? currency.format(status.monthlyRent)
         : '—';
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(icon, style: const TextStyle(fontSize: 28)),
-              const SizedBox(height: 8),
-              Text(
-                entry.property.propertyAddress,
-                style: Theme.of(context).textTheme.titleSmall,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                '${entry.property.city}, ${entry.property.state}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-              const Spacer(),
-              _InfoRow(label: 'Documents', value: '${entry.documents.length}'),
-              _InfoRow(label: 'Monthly rent', value: rentLabel),
-              const SizedBox(height: 8),
-              PropertyStatusPill(status: status),
-            ],
+    return PropVaultCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 28)),
+          const SizedBox(height: 8),
+          Text(
+            entry.property.propertyAddress,
+            style: Theme.of(context).textTheme.titleSmall,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-        ),
+          Text(
+            '${entry.property.city}, ${entry.property.state}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.text3),
+          ),
+          const Spacer(),
+          _InfoRow(label: 'Documents', value: '${entry.documents.length}'),
+          _InfoRow(label: 'Monthly rent', value: rentLabel),
+          const SizedBox(height: 8),
+          PropertyStatusPill(status: status),
+        ],
       ),
     );
   }
@@ -171,9 +152,7 @@ class _InfoRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.text3),
           ),
           Text(value, style: Theme.of(context).textTheme.bodySmall),
         ],

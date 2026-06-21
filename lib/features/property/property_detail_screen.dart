@@ -10,7 +10,9 @@ import '../../data/models/document.dart';
 import '../../data/models/document_type.dart';
 import '../../data/models/occupancy_status.dart';
 import '../shared/action_item_tile.dart';
+import '../shared/app_shell.dart';
 import '../shared/document_type_field.dart';
+import '../shared/prop_vault_card.dart';
 import '../shared/property_status_pill.dart';
 
 class PropertyDetailScreen extends ConsumerWidget {
@@ -53,14 +55,9 @@ class PropertyDetailScreen extends ConsumerWidget {
     final dateFormat = DateFormat.yMMMd();
     final currency = NumberFormat.simpleCurrency();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Property'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard'),
-        ),
-      ),
+    return SecondaryScaffold(
+      title: 'Property',
+      onBack: () => context.go('/dashboard'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/upload'),
         icon: const Icon(Icons.upload_file),
@@ -93,49 +90,46 @@ class PropertyDetailScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        detail.property.displayAddress,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${detail.documents.length} document(s) · ${detail.leases.length} lease(s)',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      PropertyStatusPill(status: status),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          OutlinedButton(
-                            onPressed: () => _updateOccupancy(
-                              ref,
-                              OccupancyStatus.vacant,
-                            ),
-                            child: const Text('Mark vacant'),
+              PropVaultCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      detail.property.displayAddress,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${detail.documents.length} document(s) · ${detail.leases.length} lease(s)',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    PropertyStatusPill(status: status),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => _updateOccupancy(
+                            ref,
+                            OccupancyStatus.vacant,
                           ),
-                          OutlinedButton(
-                            onPressed: () => _updateOccupancy(
-                              ref,
-                              OccupancyStatus.rented,
-                            ),
-                            child: const Text('Mark rented'),
+                          child: const Text('Mark vacant'),
+                        ),
+                        OutlinedButton(
+                          onPressed: () => _updateOccupancy(
+                            ref,
+                            OccupancyStatus.rented,
                           ),
-                          TextButton(
-                            onPressed: () => _updateOccupancy(ref, null),
-                            child: const Text('Auto-detect'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          child: const Text('Mark rented'),
+                        ),
+                        TextButton(
+                          onPressed: () => _updateOccupancy(ref, null),
+                          child: const Text('Auto-detect'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               if (detail.actionItems.isNotEmpty) ...[
@@ -158,10 +152,10 @@ class PropertyDetailScreen extends ConsumerWidget {
               Text('Documents', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               if (detail.documents.isEmpty)
-                const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('No documents uploaded for this property yet.'),
+                PropVaultCard(
+                  child: Text(
+                    'No documents uploaded for this property yet.',
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 )
               else
@@ -179,10 +173,10 @@ class PropertyDetailScreen extends ConsumerWidget {
               Text('Leases', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               if (detail.leases.isEmpty)
-                const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('No leases linked yet.'),
+                PropVaultCard(
+                  child: Text(
+                    'No leases linked yet.',
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 )
               else
@@ -197,9 +191,10 @@ class PropertyDetailScreen extends ConsumerWidget {
                       ? dateFormat.format(lease.leaseEndDate!)
                       : 'End N/A';
 
-                  return Card(
+                  return PropVaultCard(
                     margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(
+                      contentPadding: EdgeInsets.zero,
                       title: Text('$rent / month'),
                       subtitle: Text(
                         '$start - $end\nTenants: ${lease.tenantNames.join(', ')}',
@@ -263,10 +258,12 @@ class _DocumentTile extends StatelessWidget {
         ? document.summary!
         : _metadataSummary(document.extractedMetadata);
 
-    return Card(
+    return PropVaultCard(
       margin: const EdgeInsets.only(bottom: 12),
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: ListTile(
-        onTap: onTap,
+        contentPadding: EdgeInsets.zero,
         leading: Icon(iconForDocumentType(type)),
         title: Text(document.fileName),
         subtitle: Text(

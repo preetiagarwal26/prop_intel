@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/providers/app_providers.dart';
+import 'core/theme/app_theme.dart';
+import 'core/providers/app_providers.dart';
 import '../data/models/document_upload_draft.dart';
 import 'features/attention/attention_screen.dart';
 import 'features/auth/auth_confirm_screen.dart';
@@ -124,11 +125,8 @@ class RealEstatePortfolioApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Real Estate Portfolio',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B4332)),
-        useMaterial3: true,
-      ),
+      title: 'PropVault',
+      theme: AppTheme.light,
       routerConfig: router,
     );
   }

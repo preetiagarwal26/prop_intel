@@ -10,7 +10,9 @@ import '../../data/models/document_type.dart';
 import '../../data/models/document_upload_draft.dart';
 import '../../data/repositories/supabase_repository.dart';
 import '../../services/property_matching_service.dart';
+import '../shared/app_shell.dart';
 import '../shared/document_type_field.dart';
+import '../shared/prop_vault_card.dart';
 
 enum UploadStep {
   idle,
@@ -219,47 +221,39 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
         _step == UploadStep.classifying ||
         _step == UploadStep.matching;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upload Document'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: isProcessing ? null : () => context.go('/portfolio'),
-        ),
-      ),
+    return SecondaryScaffold(
+      title: 'Upload Document',
+      onBack: isProcessing ? () {} : () => context.go('/dashboard'),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Upload a property document',
-                      style: Theme.of(context).textTheme.titleLarge,
+            PropVaultCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Upload a property document',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'We classify leases, deeds, insurance, utility bills, and other documents, then link them to the matching property after your review.',
+                  ),
+                  if (_step != UploadStep.manualClassify) ...[
+                    const SizedBox(height: 20),
+                    FilledButton.icon(
+                      onPressed: isProcessing ? null : _pickAndProcess,
+                      icon: const Icon(Icons.upload_file),
+                      label: const Text('Select PDF'),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'We classify leases, deeds, insurance, utility bills, and other documents, then link them to the matching property after your review.',
-                    ),
-                    if (_step != UploadStep.manualClassify) ...[
-                      const SizedBox(height: 20),
-                      FilledButton.icon(
-                        onPressed: isProcessing ? null : _pickAndProcess,
-                        icon: const Icon(Icons.upload_file),
-                        label: const Text('Select PDF'),
-                      ),
-                    ],
-                    if (_selectedFile != null) ...[
-                      const SizedBox(height: 12),
-                      Text('Selected: ${_selectedFile!.name}'),
-                    ],
                   ],
-                ),
+                  if (_selectedFile != null) ...[
+                    const SizedBox(height: 12),
+                    Text('Selected: ${_selectedFile!.name}'),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -269,11 +263,8 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
               Text(_statusMessage ?? 'Processing...'),
             ],
             if (_step == UploadStep.manualClassify) ...[
-              Card(
-                color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
+              PropVaultCard(
+                child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Row(
@@ -319,7 +310,6 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
                     ],
                   ),
                 ),
-              ),
             ],
             if (_step == UploadStep.error && _error != null) ...[
               const SizedBox(height: 12),

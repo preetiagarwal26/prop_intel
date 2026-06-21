@@ -4,13 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/providers/app_providers.dart';
+import '../../core/theme/app_colors.dart';
 import '../../data/models/action_item.dart';
 import '../../data/repositories/supabase_repository.dart';
 import '../../services/portfolio_metrics_service.dart';
 import '../../services/property_status_service.dart';
 import '../shared/action_item_tile.dart';
+import '../shared/app_shell.dart';
 import '../shared/metric_card.dart';
 import '../shared/property_list_row.dart';
+import '../shared/prop_vault_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -40,42 +43,17 @@ class DashboardScreen extends ConsumerWidget {
     final metricsService = ref.watch(portfolioMetricsServiceProvider);
     final dateFormat = DateFormat.yMMMd();
     final openCount = attentionAsync.valueOrNull?.length ?? 0;
+    final subtitleDate = DateFormat('EEEE, MMM d').format(DateTime.now());
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Portfolio Overview'),
-        actions: [
-          IconButton(
-            tooltip: 'All properties',
-            onPressed: () => context.push('/properties'),
-            icon: const Icon(Icons.grid_view_outlined),
-          ),
-          IconButton(
-            tooltip: 'Needs attention',
-            onPressed: () => context.push('/attention'),
-            icon: Badge(
-              isLabelVisible: openCount > 0,
-              label: Text('$openCount'),
-              child: const Icon(Icons.notifications_outlined),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Sign out',
-            onPressed: () async {
-              await ref.read(supabaseClientProvider).auth.signOut();
-              if (context.mounted) {
-                context.go('/login');
-              }
-            },
-            icon: const Icon(Icons.logout),
-          ),
-        ],
+    return AppShell(
+      currentNav: AppNav.dashboard,
+      title: 'Portfolio Overview',
+      subtitle: portfolioAsync.maybeWhen(
+        data: (entries) =>
+            '$subtitleDate · ${entries.length} propert${entries.length == 1 ? 'y' : 'ies'}',
+        orElse: () => subtitleDate,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/upload'),
-        icon: const Icon(Icons.upload_file),
-        label: const Text('Upload Document'),
-      ),
+      actions: const [PropVaultTopActions()],
       body: portfolioAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -125,22 +103,14 @@ class DashboardScreen extends ConsumerWidget {
             openActionItems: attentionItems,
           );
           final currency = NumberFormat.simpleCurrency();
-          final subtitleDate = DateFormat('EEEE, MMM d').format(DateTime.now());
 
           return LayoutBuilder(
             builder: (context, constraints) {
               final wide = constraints.maxWidth >= 900;
 
               return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+                padding: EdgeInsets.zero,
                 children: [
-                  Text(
-                    '$subtitleDate · ${metrics.propertyCount} propert${metrics.propertyCount == 1 ? 'y' : 'ies'}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
                   _MetricsGrid(
                     wide: wide,
                     metrics: metrics,
@@ -292,39 +262,27 @@ class _PropertiesPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Properties', style: Theme.of(context).textTheme.titleLarge),
-                TextButton(onPressed: onViewAll, child: const Text('View all')),
-              ],
-            ),
-            Text(
-              'Current portfolio · status & rent',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            ...entries.map((entry) {
-              final status = statusService.resolve(
-                property: entry.property,
-                leases: entry.leases,
-              );
-              return PropertyListRow(
-                entry: entry,
-                status: status,
-                onTap: () => context.push('/property/${entry.property.id}'),
-              );
-            }),
-          ],
-        ),
+    return PropVaultCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PropVaultPanelHeader(
+            title: 'Properties',
+            subtitle: 'Current portfolio · status & rent',
+            trailing: TextButton(onPressed: onViewAll, child: const Text('View all')),
+          ),
+          ...entries.map((entry) {
+            final status = statusService.resolve(
+              property: entry.property,
+              leases: entry.leases,
+            );
+            return PropertyListRow(
+              entry: entry,
+              status: status,
+              onTap: () => context.push('/property/${entry.property.id}'),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -351,87 +309,87 @@ class _AttentionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Notifications', style: Theme.of(context).textTheme.titleLarge),
-                if (openCount > 0)
-                  TextButton(onPressed: onViewAll, child: Text('View all ($openCount)')),
-              ],
-            ),
-            Text(
-              'Upcoming & urgent',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            if (items.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(
-                  child: Text(
-                    'All caught up — no open items.',
-                    style: Theme.of(context).textTheme.bodyMedium,
+    return PropVaultCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PropVaultPanelHeader(
+            title: 'Notifications',
+            subtitle: 'Upcoming & urgent',
+            trailing: openCount > 0
+                ? TextButton(onPressed: onViewAll, child: Text('View all ($openCount)'))
+                : null,
+          ),
+          if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'All caught up — no open items.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            )
+          else
+            ...items.take(5).map(
+                  (item) => ActionItemTile(
+                    item: item,
+                    dateFormat: dateFormat,
+                    compact: true,
+                    onTap: () => onItemTap(item),
+                    onMarkDone: () => onMarkDone(item),
+                    onDismiss: () => onDismiss(item),
                   ),
                 ),
-              )
-            else
-              ...items.take(5).map(
-                    (item) => ActionItemTile(
-                      item: item,
-                      dateFormat: dateFormat,
-                      compact: true,
-                      onTap: () => onItemTap(item),
-                      onMarkDone: () => onMarkDone(item),
-                      onDismiss: () => onDismiss(item),
-                    ),
-                  ),
-          ],
-        ),
+        ],
       ),
     );
   }
 }
 
 class _IncomePlaceholder extends StatelessWidget {
+  static const _barHeights = [0.52, 0.58, 0.55, 0.62, 0.60, 0.68, 0.71, 0.74, 0.70, 0.78, 0.82, 1.0];
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Income trend', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 4),
-            Text(
-              'Monthly rental income chart — coming in Phase 4',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return PropVaultCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const PropVaultPanelHeader(
+            title: 'Income trend',
+            subtitle: 'Monthly rental income — coming in Phase 4',
+          ),
+          SizedBox(
+            height: 80,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (final height in _barHeights)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: FractionallySizedBox(
+                        heightFactor: height,
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.gold.withValues(alpha: height == 1.0 ? 1 : 0.7),
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              height: 80,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Rent schedule data required',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Rent schedule data required',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.text3),
+          ),
+        ],
       ),
     );
   }
