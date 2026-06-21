@@ -42,6 +42,7 @@ class DocumentUploadDraft {
     DocumentType? documentType,
     bool? createNewProperty,
     Map<String, dynamic>? extractedMetadata,
+    this.isManualClassification = false,
   })  : propertyAddress = propertyAddress ?? classification.propertyAddress,
         city = city ?? classification.city,
         state = state ?? classification.state,
@@ -66,10 +67,14 @@ class DocumentUploadDraft {
   DocumentType documentType;
   bool createNewProperty;
   Map<String, dynamic> extractedMetadata;
+  final bool isManualClassification;
 
   Property? get matchedProperty => matchResult.property;
 
   bool get isLease => documentType == DocumentType.lease;
+
+  double get savedClassificationConfidence =>
+      isManualClassification ? 1.0 : classification.confidence;
 
   LeaseExtraction toLeaseExtraction() {
     final metadata = extractedMetadata;

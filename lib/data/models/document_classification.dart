@@ -84,4 +84,17 @@ class DocumentClassification {
     }
     return value.toString();
   }
+
+  /// Used when automatic classification fails or is skipped.
+  factory DocumentClassification.manual({
+    DocumentType documentType = DocumentType.other,
+  }) {
+    return DocumentClassification(
+      documentType: documentType,
+      confidence: 0,
+      summary: 'Document type selected manually.',
+    );
+  }
+
+  bool get isLowConfidence => confidence > 0 && confidence < 0.6;
 }

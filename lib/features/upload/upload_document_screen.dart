@@ -6,9 +6,22 @@ import 'package:go_router/go_router.dart';
 import '../../core/errors/app_exception.dart';
 import '../../core/providers/app_providers.dart';
 import '../../data/models/document_classification.dart';
+import '../../data/models/document_type.dart';
 import '../../data/models/document_upload_draft.dart';
+import '../../data/repositories/supabase_repository.dart';
+import '../../services/property_matching_service.dart';
+import '../shared/document_type_field.dart';
 
-enum UploadStep { idle, uploading, extracting, classifying, matching, done, error }
+enum UploadStep {
+  idle,
+  uploading,
+  extracting,
+  classifying,
+  matching,
+  manualClassify,
+  done,
+  error,
+}
 
 class UploadDocumentScreen extends ConsumerStatefulWidget {
   const UploadDocumentScreen({super.key});
@@ -23,11 +36,17 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
   String? _statusMessage;
   PlatformFile? _selectedFile;
 
+  String? _documentId;
+  String? _storagePath;
+  DocumentType _manualType = DocumentType.other;
+
   Future<void> _pickAndProcess() async {
     setState(() {
       _error = null;
       _statusMessage = null;
       _step = UploadStep.idle;
+      _documentId = null;
+      _storagePath = null;
     });
 
     final result = await FilePicker.platform.pickFiles(
@@ -64,12 +83,16 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
       setState(() {
         _step = UploadStep.uploading;
         _statusMessage = 'Uploading document...';
+        _error = null;
       });
 
       final uploadResult = await storageService.uploadDocument(
         fileName: file.name,
         bytes: file.bytes!,
       );
+
+      _documentId = uploadResult.document.id;
+      _storagePath = uploadResult.storagePath;
 
       setState(() {
         _step = UploadStep.extracting;
@@ -90,36 +113,24 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
         setState(() {
           _statusMessage = 'Retrying classification...';
         });
-        classification = await classificationService.classifyDocument(documentText);
+        try {
+          classification = await classificationService.classifyDocument(documentText);
+        } on DocumentClassificationException catch (e) {
+          setState(() {
+            _error = e.message;
+            _step = UploadStep.manualClassify;
+            _statusMessage = null;
+          });
+          return;
+        }
       }
 
-      setState(() {
-        _step = UploadStep.matching;
-        _statusMessage = 'Matching property...';
-      });
-
-      final properties = await repository.fetchProperties();
-      final matchResult = matchingService.findMatch(
-        classification.addressHint,
-        properties,
-      );
-
-      final draft = DocumentUploadDraft(
-        documentId: uploadResult.document.id,
-        storagePath: uploadResult.storagePath,
+      await _navigateToReview(
         fileName: file.name,
         classification: classification,
-        matchResult: matchResult,
+        matchingService: matchingService,
+        repository: repository,
       );
-
-      setState(() {
-        _step = UploadStep.done;
-        _statusMessage = 'Classification complete.';
-      });
-
-      if (mounted) {
-        context.push('/review', extra: draft);
-      }
     } on AppException catch (e) {
       setState(() {
         _error = e.message;
@@ -133,11 +144,80 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
     }
   }
 
+  Future<void> _continueWithManualType() async {
+    if (_documentId == null || _storagePath == null || _selectedFile == null) {
+      setState(() {
+        _error = 'Upload session expired. Please select the file again.';
+        _step = UploadStep.error;
+      });
+      return;
+    }
+
+    final matchingService = ref.read(propertyMatchingServiceProvider);
+    final repository = ref.read(supabaseRepositoryProvider);
+
+    await _navigateToReview(
+      fileName: _selectedFile!.name,
+      classification: DocumentClassification.manual(documentType: _manualType),
+      matchingService: matchingService,
+      repository: repository,
+      isManualClassification: true,
+    );
+  }
+
+  Future<void> _retryClassification() async {
+    if (_selectedFile == null) {
+      await _pickAndProcess();
+      return;
+    }
+    await _processFile(_selectedFile!);
+  }
+
+  Future<void> _navigateToReview({
+    required String fileName,
+    required DocumentClassification classification,
+    required PropertyMatchingService matchingService,
+    required SupabaseRepository repository,
+    bool isManualClassification = false,
+  }) async {
+    setState(() {
+      _step = UploadStep.matching;
+      _statusMessage = 'Matching property...';
+      _error = null;
+    });
+
+    final properties = await repository.fetchProperties();
+    final matchResult = matchingService.findMatch(
+      classification.addressHint,
+      properties,
+    );
+
+    final draft = DocumentUploadDraft(
+      documentId: _documentId!,
+      storagePath: _storagePath!,
+      fileName: fileName,
+      classification: classification,
+      matchResult: matchResult,
+      documentType: isManualClassification ? _manualType : null,
+      isManualClassification: isManualClassification,
+    );
+
+    setState(() {
+      _step = UploadStep.done;
+      _statusMessage = 'Ready for review.';
+    });
+
+    if (mounted) {
+      context.push('/review', extra: draft);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isProcessing = _step != UploadStep.idle &&
-        _step != UploadStep.error &&
-        _step != UploadStep.done;
+    final isProcessing = _step == UploadStep.uploading ||
+        _step == UploadStep.extracting ||
+        _step == UploadStep.classifying ||
+        _step == UploadStep.matching;
 
     return Scaffold(
       appBar: AppBar(
@@ -166,12 +246,14 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
                     const Text(
                       'We classify leases, deeds, insurance, utility bills, and other documents, then link them to the matching property after your review.',
                     ),
-                    const SizedBox(height: 20),
-                    FilledButton.icon(
-                      onPressed: isProcessing ? null : _pickAndProcess,
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text('Select PDF'),
-                    ),
+                    if (_step != UploadStep.manualClassify) ...[
+                      const SizedBox(height: 20),
+                      FilledButton.icon(
+                        onPressed: isProcessing ? null : _pickAndProcess,
+                        icon: const Icon(Icons.upload_file),
+                        label: const Text('Select PDF'),
+                      ),
+                    ],
                     if (_selectedFile != null) ...[
                       const SizedBox(height: 12),
                       Text('Selected: ${_selectedFile!.name}'),
@@ -186,7 +268,60 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
               const SizedBox(height: 12),
               Text(_statusMessage ?? 'Processing...'),
             ],
-            if (_error != null) ...[
+            if (_step == UploadStep.manualClassify) ...[
+              Card(
+                color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Automatic classification unavailable',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _error ??
+                            'We could not classify this document automatically. Choose the document type to continue.',
+                      ),
+                      const SizedBox(height: 20),
+                      DocumentTypeField(
+                        value: _manualType,
+                        label: 'What type of document is this?',
+                        onChanged: (type) {
+                          if (type != null) {
+                            setState(() => _manualType = type);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: _continueWithManualType,
+                        child: const Text('Continue to review'),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        onPressed: _retryClassification,
+                        child: const Text('Retry automatic classification'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            if (_step == UploadStep.error && _error != null) ...[
               const SizedBox(height: 12),
               Text(
                 _error!,

@@ -6,10 +6,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/errors/app_exception.dart';
 import '../../core/providers/app_providers.dart';
-import '../../data/models/document_type.dart';
 import '../../data/models/document_upload_draft.dart';
 import '../../data/models/lease.dart';
 import '../../data/models/property.dart';
+import '../shared/document_type_field.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   const ReviewScreen({super.key, required this.draft});
@@ -126,7 +126,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         propertyId: property.id,
         leaseId: leaseId,
         documentType: _draft.documentType,
-        classificationConfidence: _draft.classification.confidence,
+        classificationConfidence: _draft.savedClassificationConfidence,
         extractedMetadata: _draft.extractedMetadata,
       );
 
@@ -171,14 +171,67 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            Chip(
-              avatar: Icon(_iconForType(_draft.documentType)),
-              label: Text(
-                '${_draft.documentType.label} '
-                '(${(_draft.classification.confidence * 100).toStringAsFixed(0)}% confidence)',
+            if (_draft.isManualClassification) ...[
+              Card(
+                color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit_note),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Document type was set manually. Confirm or change it below.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
+              const SizedBox(height: 12),
+            ] else if (_draft.classification.isLowConfidence) ...[
+              Card(
+                color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_outlined),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Low classification confidence. Please verify the document type.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            DocumentTypeField(
+              value: _draft.documentType,
+              enabled: !_isSaving,
+              onChanged: (type) {
+                if (type != null) {
+                  setState(() => _draft.documentType = type);
+                }
+              },
             ),
-            if (_draft.classification.summary.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            if (!_draft.isManualClassification)
+              Chip(
+                avatar: Icon(iconForDocumentType(_draft.documentType)),
+                label: Text(
+                  'AI confidence: '
+                  '${(_draft.classification.confidence * 100).toStringAsFixed(0)}%',
+                ),
+              ),
+            if (_draft.classification.summary.isNotEmpty &&
+                !_draft.isManualClassification) ...[
               const SizedBox(height: 8),
               Text(_draft.classification.summary),
             ],
@@ -266,19 +319,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             : null,
       ),
     );
-  }
-
-  IconData _iconForType(DocumentType type) {
-    return switch (type) {
-      DocumentType.lease => Icons.description,
-      DocumentType.deed => Icons.gavel,
-      DocumentType.insurance => Icons.shield,
-      DocumentType.utility => Icons.bolt,
-      DocumentType.tax => Icons.receipt_long,
-      DocumentType.hoa => Icons.apartment,
-      DocumentType.permit => Icons.verified,
-      DocumentType.other => Icons.insert_drive_file,
-    };
   }
 
   String _formatKey(String key) {
