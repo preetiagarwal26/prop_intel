@@ -23,3 +23,7 @@ class AppStorageException extends AppException {
 class RepositoryException extends AppException {
   RepositoryException(super.message, {super.cause});
 }
+
+class DocumentClassificationException extends AppException {
+  DocumentClassificationException(super.message, {super.cause});
+}

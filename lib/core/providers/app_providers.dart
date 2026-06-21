@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/app_config.dart';
 import '../../data/repositories/supabase_repository.dart';
+import '../../services/document_classification_service.dart';
 import '../../services/document_storage_service.dart';
 import '../../services/lease_extraction_service.dart';
 import '../../services/pdf_extraction_service.dart';
@@ -28,6 +29,11 @@ final leaseExtractionServiceProvider = Provider<LeaseExtractionService>((ref) {
   return LeaseExtractionService(ref.watch(supabaseClientProvider));
 });
 
+final documentClassificationServiceProvider =
+    Provider<DocumentClassificationService>((ref) {
+  return DocumentClassificationService(ref.watch(supabaseClientProvider));
+});
+
 final documentStorageServiceProvider = Provider<DocumentStorageService>((ref) {
   return DocumentStorageService(
     ref.watch(supabaseClientProvider),
@@ -46,4 +52,10 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
 final portfolioProvider = FutureProvider<List<PortfolioEntry>>((ref) async {
   final repository = ref.watch(supabaseRepositoryProvider);
   return repository.fetchPortfolio();
+});
+
+final propertyDetailProvider =
+    FutureProvider.family<PropertyDetail, String>((ref, propertyId) async {
+  final repository = ref.watch(supabaseRepositoryProvider);
+  return repository.fetchPropertyDetail(propertyId);
 });

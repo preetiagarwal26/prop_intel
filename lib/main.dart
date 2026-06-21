@@ -16,6 +16,9 @@ Future<void> main() async {
   await Supabase.initialize(
     url: config.supabaseUrl,
     anonKey: config.supabaseAnonKey, // ignore: deprecated_member_use
+    authOptions: const FlutterAuthClientOptions(
+      detectSessionInUri: true,
+    ),
   );
 
   runApp(

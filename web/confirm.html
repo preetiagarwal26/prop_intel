@@ -79,6 +79,13 @@
     <code id="debug" class="hidden"></code>
   </div>
   <script>
+    // Legacy static page — forward to Flutter auth route with tokens preserved.
+    if (window.location.pathname.endsWith('confirm.html')) {
+      window.location.replace(
+        '/auth/confirm' + window.location.search + window.location.hash,
+      );
+    }
+
     const params = new URLSearchParams(window.location.search);
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const error = params.get('error') || hash.get('error');

@@ -16,7 +16,7 @@ class DocumentStorageService {
   static const bucketName = 'lease-documents';
   static const _uuid = Uuid();
 
-  Future<({Document document, String storagePath})> uploadLeasePdf({
+  Future<({Document document, String storagePath})> uploadDocument({
     required String fileName,
     required List<int> bytes,
   }) async {
@@ -38,7 +38,7 @@ class DocumentStorageService {
 
       return (document: document, storagePath: storagePath);
     } catch (e) {
-      throw AppStorageException('Failed to upload lease document.', cause: e);
+      throw AppStorageException('Failed to upload document.', cause: e);
     }
   }
 }

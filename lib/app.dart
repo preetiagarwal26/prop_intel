@@ -3,13 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/providers/app_providers.dart';
-import '../data/models/lease_upload_draft.dart';
+import '../data/models/document_upload_draft.dart';
+import 'features/auth/auth_confirm_screen.dart';
 import 'features/auth/check_email_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/signup_screen.dart';
 import 'features/portfolio/portfolio_screen.dart';
+import 'features/property/property_detail_screen.dart';
 import 'features/review/review_screen.dart';
-import 'features/upload/upload_lease_screen.dart';
+import 'features/upload/upload_document_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -23,7 +25,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final session = authState.valueOrNull?.session;
       final isAuthRoute = state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup' ||
-          state.matchedLocation == '/signup/check-email';
+          state.matchedLocation == '/signup/check-email' ||
+          state.matchedLocation == '/auth/confirm';
 
       if (session == null && !isAuthRoute) {
         return '/login';
@@ -50,21 +53,32 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/auth/confirm',
+        builder: (context, state) => const AuthConfirmScreen(),
+      ),
+      GoRoute(
         path: '/portfolio',
         builder: (context, state) => const PortfolioScreen(),
       ),
       GoRoute(
         path: '/upload',
-        builder: (context, state) => const UploadLeaseScreen(),
+        builder: (context, state) => const UploadDocumentScreen(),
       ),
       GoRoute(
         path: '/review',
         builder: (context, state) {
-          final draft = state.extra as LeaseUploadDraft?;
+          final draft = state.extra as DocumentUploadDraft?;
           if (draft == null) {
-            return const UploadLeaseScreen();
+            return const UploadDocumentScreen();
           }
           return ReviewScreen(draft: draft);
+        },
+      ),
+      GoRoute(
+        path: '/property/:id',
+        builder: (context, state) {
+          final propertyId = state.pathParameters['id']!;
+          return PropertyDetailScreen(propertyId: propertyId);
         },
       ),
     ],

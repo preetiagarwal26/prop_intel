@@ -1,26 +1,26 @@
 import 'package:string_similarity/string_similarity.dart';
 
 import '../core/utils/address_normalizer.dart';
-import '../data/models/lease_extraction.dart';
-import '../data/models/lease_upload_draft.dart';
+import '../data/models/document_upload_draft.dart';
 import '../data/models/property.dart';
+import '../data/models/document_classification.dart';
 
 class PropertyMatchingService {
   static const double fuzzyThreshold = 0.85;
 
   PropertyMatchResult findMatch(
-    LeaseExtraction extraction,
+    PropertyAddressHint hint,
     List<Property> properties,
   ) {
     if (properties.isEmpty) {
       return PropertyMatchResult.noMatch();
     }
 
-    final normalizedInput = AddressNormalizer.normalize(extraction.propertyAddress);
-    final inputCity = extraction.city.toLowerCase().trim();
-    final inputState = extraction.state.toLowerCase().trim();
-    final inputZip = extraction.zipCode.trim();
-    final inputUnit = extraction.unitNumber.toLowerCase().trim();
+    final normalizedInput = AddressNormalizer.normalize(hint.propertyAddress);
+    final inputCity = hint.city.toLowerCase().trim();
+    final inputState = hint.state.toLowerCase().trim();
+    final inputZip = hint.zipCode.trim();
+    final inputUnit = hint.unitNumber.toLowerCase().trim();
 
     Property? exactMatch;
     for (final property in properties) {
@@ -90,11 +90,11 @@ class PropertyMatchingService {
         unitNumber: property.unitNumber,
       );
       final target = AddressNormalizer.fullAddress(
-        address: extraction.propertyAddress,
-        city: extraction.city,
-        state: extraction.state,
-        zipCode: extraction.zipCode,
-        unitNumber: extraction.unitNumber,
+        address: hint.propertyAddress,
+        city: hint.city,
+        state: hint.state,
+        zipCode: hint.zipCode,
+        unitNumber: hint.unitNumber,
       );
 
       final score = StringSimilarity.compareTwoStrings(candidate, target);

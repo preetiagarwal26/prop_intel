@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/errors/app_exception.dart';
+import '../../services/document_storage_service.dart';
 import '../models/document.dart';
+import '../models/document_type.dart';
 import '../models/lease.dart';
 import '../models/property.dart';
 
@@ -33,6 +35,20 @@ class SupabaseRepository {
     }
   }
 
+  Future<Property> fetchPropertyById(String propertyId) async {
+    try {
+      final response = await _client
+          .from('properties')
+          .select()
+          .eq('id', propertyId)
+          .single();
+
+      return Property.fromJson(response);
+    } catch (e) {
+      throw RepositoryException('Failed to load property.', cause: e);
+    }
+  }
+
   Future<List<Lease>> fetchLeasesForProperty(String propertyId) async {
     try {
       final response = await _client
@@ -46,6 +62,44 @@ class SupabaseRepository {
           .toList();
     } catch (e) {
       throw RepositoryException('Failed to load leases.', cause: e);
+    }
+  }
+
+  Future<List<Document>> fetchDocumentsForProperty(String propertyId) async {
+    try {
+      final response = await _client
+          .from('documents')
+          .select()
+          .eq('property_id', propertyId)
+          .order('uploaded_at', ascending: false);
+
+      return (response as List)
+          .map((row) => Document.fromJson(row as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw RepositoryException('Failed to load documents.', cause: e);
+    }
+  }
+
+  Future<PropertyDetail> fetchPropertyDetail(String propertyId) async {
+    final property = await fetchPropertyById(propertyId);
+    final leases = await fetchLeasesForProperty(propertyId);
+    final documents = await fetchDocumentsForProperty(propertyId);
+    return PropertyDetail(
+      property: property,
+      leases: leases,
+      documents: documents,
+    );
+  }
+
+  Future<String> getDocumentSignedUrl(String storagePath) async {
+    try {
+      final response = await _client.storage
+          .from(DocumentStorageService.bucketName)
+          .createSignedUrl(storagePath, 3600);
+      return response;
+    } catch (e) {
+      throw RepositoryException('Failed to open document.', cause: e);
     }
   }
 
@@ -134,7 +188,10 @@ class SupabaseRepository {
   Future<Document> updateDocument({
     required String documentId,
     required String propertyId,
-    required String leaseId,
+    String? leaseId,
+    required DocumentType documentType,
+    required double classificationConfidence,
+    required Map<String, dynamic> extractedMetadata,
   }) async {
     try {
       final response = await _client
@@ -142,6 +199,9 @@ class SupabaseRepository {
           .update({
             'property_id': propertyId,
             'lease_id': leaseId,
+            'document_type': documentType.value,
+            'classification_confidence': classificationConfidence,
+            'extracted_metadata': extractedMetadata,
           })
           .eq('id', documentId)
           .select()
@@ -164,16 +224,38 @@ class SupabaseRepository {
 
     for (final property in properties) {
       final leases = await fetchLeasesForProperty(property.id);
-      entries.add(PortfolioEntry(property: property, leases: leases));
+      final documents = await fetchDocumentsForProperty(property.id);
+      entries.add(PortfolioEntry(
+        property: property,
+        leases: leases,
+        documents: documents,
+      ));
     }
 
     return entries;
   }
 }
 
-class PortfolioEntry {
-  const PortfolioEntry({required this.property, required this.leases});
+class PropertyDetail {
+  const PropertyDetail({
+    required this.property,
+    required this.leases,
+    required this.documents,
+  });
 
   final Property property;
   final List<Lease> leases;
+  final List<Document> documents;
+}
+
+class PortfolioEntry {
+  const PortfolioEntry({
+    required this.property,
+    required this.leases,
+    required this.documents,
+  });
+
+  final Property property;
+  final List<Lease> leases;
+  final List<Document> documents;
 }

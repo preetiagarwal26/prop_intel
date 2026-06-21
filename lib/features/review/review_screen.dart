@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/errors/app_exception.dart';
 import '../../core/providers/app_providers.dart';
+import '../../data/models/document_type.dart';
+import '../../data/models/document_upload_draft.dart';
 import '../../data/models/lease.dart';
-import '../../data/models/lease_upload_draft.dart';
 import '../../data/models/property.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   const ReviewScreen({super.key, required this.draft});
 
-  final LeaseUploadDraft draft;
+  final DocumentUploadDraft draft;
 
   @override
   ConsumerState<ReviewScreen> createState() => _ReviewScreenState();
@@ -22,7 +22,7 @@ class ReviewScreen extends ConsumerStatefulWidget {
 
 class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   final _formKey = GlobalKey<FormState>();
-  late LeaseUploadDraft _draft;
+  late DocumentUploadDraft _draft;
   bool _isSaving = false;
   String? _error;
 
@@ -31,13 +31,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   late final TextEditingController _stateController;
   late final TextEditingController _zipController;
   late final TextEditingController _unitController;
-  late final TextEditingController _startDateController;
-  late final TextEditingController _endDateController;
-  late final TextEditingController _rentController;
-  late final TextEditingController _depositController;
-  late final TextEditingController _lateFeeController;
-  late final TextEditingController _tenantsController;
-  late final TextEditingController _landlordController;
 
   @override
   void initState() {
@@ -48,13 +41,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     _stateController = TextEditingController(text: _draft.state);
     _zipController = TextEditingController(text: _draft.zipCode);
     _unitController = TextEditingController(text: _draft.unitNumber);
-    _startDateController = TextEditingController(text: _draft.leaseStartDate);
-    _endDateController = TextEditingController(text: _draft.leaseEndDate);
-    _rentController = TextEditingController(text: _draft.monthlyRent);
-    _depositController = TextEditingController(text: _draft.securityDeposit);
-    _lateFeeController = TextEditingController(text: _draft.lateFee);
-    _tenantsController = TextEditingController(text: _draft.tenantNames.join(', '));
-    _landlordController = TextEditingController(text: _draft.landlordName);
   }
 
   @override
@@ -64,13 +50,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     _stateController.dispose();
     _zipController.dispose();
     _unitController.dispose();
-    _startDateController.dispose();
-    _endDateController.dispose();
-    _rentController.dispose();
-    _depositController.dispose();
-    _lateFeeController.dispose();
-    _tenantsController.dispose();
-    _landlordController.dispose();
     super.dispose();
   }
 
@@ -80,17 +59,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     _draft.state = _stateController.text.trim();
     _draft.zipCode = _zipController.text.trim();
     _draft.unitNumber = _unitController.text.trim();
-    _draft.leaseStartDate = _startDateController.text.trim();
-    _draft.leaseEndDate = _endDateController.text.trim();
-    _draft.monthlyRent = _rentController.text.trim();
-    _draft.securityDeposit = _depositController.text.trim();
-    _draft.lateFee = _lateFeeController.text.trim();
-    _draft.tenantNames = _tenantsController.text
-        .split(',')
-        .map((name) => name.trim())
-        .where((name) => name.isNotEmpty)
-        .toList();
-    _draft.landlordName = _landlordController.text.trim();
   }
 
   Future<void> _save() async {
@@ -106,7 +74,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     });
 
     final repository = ref.read(supabaseRepositoryProvider);
-    final extraction = _draft.toExtraction();
 
     try {
       final Property property;
@@ -134,41 +101,50 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         );
       }
 
-      final lease = await repository.createLease(
-        Lease(
-          id: '',
-          propertyId: property.id,
-          leaseStartDate: extraction.leaseStartDateValue,
-          leaseEndDate: extraction.leaseEndDateValue,
-          monthlyRent: extraction.monthlyRentValue,
-          securityDeposit: extraction.securityDepositValue,
-          lateFee: extraction.lateFeeValue,
-          tenantNames: _draft.tenantNames,
-          landlordName: _draft.landlordName.isEmpty ? null : _draft.landlordName,
-          rawExtractionJson: extraction.toJson(),
-        ),
-      );
+      String? leaseId;
+      if (_draft.isLease) {
+        final extraction = _draft.toLeaseExtraction();
+        final lease = await repository.createLease(
+          Lease(
+            id: '',
+            propertyId: property.id,
+            leaseStartDate: extraction.leaseStartDateValue,
+            leaseEndDate: extraction.leaseEndDateValue,
+            monthlyRent: extraction.monthlyRentValue,
+            securityDeposit: extraction.securityDepositValue,
+            lateFee: extraction.lateFeeValue,
+            tenantNames: extraction.tenantNames,
+            landlordName: extraction.landlordName.isEmpty ? null : extraction.landlordName,
+            rawExtractionJson: extraction.toJson(),
+          ),
+        );
+        leaseId = lease.id;
+      }
 
       await repository.updateDocument(
         documentId: _draft.documentId,
         propertyId: property.id,
-        leaseId: lease.id,
+        leaseId: leaseId,
+        documentType: _draft.documentType,
+        classificationConfidence: _draft.classification.confidence,
+        extractedMetadata: _draft.extractedMetadata,
       );
 
       ref.invalidate(portfolioProvider);
+      ref.invalidate(propertyDetailProvider(property.id));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lease saved successfully.')),
+          const SnackBar(content: Text('Document saved successfully.')),
         );
-        context.go('/portfolio');
+        context.go('/property/${property.id}');
       }
     } on AppException catch (e) {
       setState(() => _error = e.message);
     } on PostgrestException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = 'Failed to save lease. Please try again.');
+      setState(() => _error = 'Failed to save document. Please try again.');
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -178,10 +154,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.simpleCurrency();
     final matchLabel = _draft.createNewProperty
         ? 'New property'
-        : 'Existing property (${( _draft.matchResult.confidence * 100).toStringAsFixed(0)}% match)';
+        : 'Existing property (${(_draft.matchResult.confidence * 100).toStringAsFixed(0)}% match)';
 
     return Scaffold(
       appBar: AppBar(
@@ -196,6 +171,18 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            Chip(
+              avatar: Icon(_iconForType(_draft.documentType)),
+              label: Text(
+                '${_draft.documentType.label} '
+                '(${(_draft.classification.confidence * 100).toStringAsFixed(0)}% confidence)',
+              ),
+            ),
+            if (_draft.classification.summary.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(_draft.classification.summary),
+            ],
+            const SizedBox(height: 16),
             Chip(
               avatar: Icon(
                 _draft.createNewProperty ? Icons.add_home : Icons.home,
@@ -212,28 +199,26 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             _field(_unitController, 'Unit number'),
             SwitchListTile(
               title: const Text('Create as new property'),
-              subtitle: const Text('Turn off to update the matched property instead'),
+              subtitle: const Text('Turn off to link to the matched property instead'),
               value: _draft.createNewProperty,
               onChanged: _isSaving
                   ? null
                   : (value) => setState(() => _draft.createNewProperty = value),
             ),
-            const SizedBox(height: 24),
-            Text('Lease Info', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            _field(_startDateController, 'Lease start date (YYYY-MM-DD)'),
-            _field(_endDateController, 'Lease end date (YYYY-MM-DD)'),
-            _field(_rentController, 'Monthly rent'),
-            _field(_depositController, 'Security deposit'),
-            _field(_lateFeeController, 'Late fee'),
-            _field(_tenantsController, 'Tenant names (comma-separated)'),
-            _field(_landlordController, 'Landlord name'),
+            if (_draft.extractedMetadata.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text('Extracted Details', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              ..._draft.extractedMetadata.entries.map(
+                (entry) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(_formatKey(entry.key)),
+                  subtitle: Text(entry.value?.toString() ?? ''),
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             Text('File: ${_draft.fileName}'),
-            if (_draft.monthlyRent.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text('Parsed rent preview: ${currency.format(_draft.toExtraction().monthlyRentValue ?? 0)}'),
-            ],
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(
@@ -250,7 +235,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Save Lease'),
+                  : const Text('Save Document'),
             ),
           ],
         ),
@@ -281,5 +266,25 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             : null,
       ),
     );
+  }
+
+  IconData _iconForType(DocumentType type) {
+    return switch (type) {
+      DocumentType.lease => Icons.description,
+      DocumentType.deed => Icons.gavel,
+      DocumentType.insurance => Icons.shield,
+      DocumentType.utility => Icons.bolt,
+      DocumentType.tax => Icons.receipt_long,
+      DocumentType.hoa => Icons.apartment,
+      DocumentType.permit => Icons.verified,
+      DocumentType.other => Icons.insert_drive_file,
+    };
+  }
+
+  String _formatKey(String key) {
+    return key
+        .split('_')
+        .map((part) => part.isEmpty ? part : '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
   }
 }

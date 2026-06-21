@@ -33,7 +33,7 @@ class PortfolioScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/upload'),
         icon: const Icon(Icons.upload_file),
-        label: const Text('Upload Lease'),
+        label: const Text('Upload Document'),
       ),
       body: portfolioAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -69,7 +69,7 @@ class PortfolioScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Upload your first lease to create a property and lease record.',
+                      'Upload your first document to create a property and document vault.',
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -83,41 +83,63 @@ class PortfolioScreen extends ConsumerWidget {
             itemCount: entries.length,
             itemBuilder: (context, index) {
               final entry = entries[index];
+              final docTypes = entry.documents
+                  .map((doc) => doc.documentType?.label ?? 'Document')
+                  .toSet()
+                  .take(3)
+                  .join(', ');
+
               return Card(
                 margin: const EdgeInsets.only(bottom: 16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        entry.property.displayAddress,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      if (entry.leases.isEmpty)
-                        const Text('No leases linked yet.')
-                      else
-                        ...entry.leases.map((lease) {
-                          final rent = lease.monthlyRent != null
-                              ? currency.format(lease.monthlyRent)
-                              : 'Rent N/A';
-                          final start = lease.leaseStartDate != null
-                              ? dateFormat.format(lease.leaseStartDate!)
-                              : 'Start N/A';
-                          final end = lease.leaseEndDate != null
-                              ? dateFormat.format(lease.leaseEndDate!)
-                              : 'End N/A';
-
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: Text('$rent / month'),
-                            subtitle: Text(
-                              '$start - $end\nTenants: ${lease.tenantNames.join(', ')}',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => context.push('/property/${entry.property.id}'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                entry.property.displayAddress,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
                             ),
-                          );
-                        }),
-                    ],
+                            const Icon(Icons.chevron_right),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${entry.documents.length} document(s)'
+                          '${docTypes.isNotEmpty ? ' · $docTypes' : ''}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        if (entry.leases.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          ...entry.leases.take(2).map((lease) {
+                            final rent = lease.monthlyRent != null
+                                ? currency.format(lease.monthlyRent)
+                                : 'Rent N/A';
+                            final start = lease.leaseStartDate != null
+                                ? dateFormat.format(lease.leaseStartDate!)
+                                : 'Start N/A';
+                            final end = lease.leaseEndDate != null
+                                ? dateFormat.format(lease.leaseEndDate!)
+                                : 'End N/A';
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                '$rent / month · $start - $end',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            );
+                          }),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               );

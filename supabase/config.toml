@@ -36,3 +36,6 @@ enable_signup = true
 
 [functions.extract-lease]
 verify_jwt = true
+
+[functions.classify-document]
+verify_jwt = true

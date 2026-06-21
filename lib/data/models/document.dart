@@ -1,3 +1,5 @@
+import 'document_type.dart';
+
 class Document {
   const Document({
     required this.id,
@@ -6,6 +8,9 @@ class Document {
     required this.fileName,
     required this.storagePath,
     this.uploadedAt,
+    this.documentType,
+    this.classificationConfidence,
+    this.extractedMetadata = const {},
   });
 
   final String id;
@@ -14,8 +19,12 @@ class Document {
   final String fileName;
   final String storagePath;
   final DateTime? uploadedAt;
+  final DocumentType? documentType;
+  final double? classificationConfidence;
+  final Map<String, dynamic> extractedMetadata;
 
   factory Document.fromJson(Map<String, dynamic> json) {
+    final metadata = json['extracted_metadata'];
     return Document(
       id: json['id'] as String,
       propertyId: json['property_id'] as String?,
@@ -25,18 +34,14 @@ class Document {
       uploadedAt: json['uploaded_at'] != null
           ? DateTime.parse(json['uploaded_at'] as String)
           : null,
+      documentType: json['document_type'] != null
+          ? DocumentType.fromValue(json['document_type'] as String?)
+          : null,
+      classificationConfidence:
+          (json['classification_confidence'] as num?)?.toDouble(),
+      extractedMetadata: metadata is Map<String, dynamic>
+          ? Map<String, dynamic>.from(metadata)
+          : const {},
     );
-  }
-
-  Map<String, dynamic> toInsertJson({
-    required String propertyId,
-    String? leaseId,
-  }) {
-    return {
-      'property_id': propertyId,
-      'lease_id': leaseId,
-      'file_name': fileName,
-      'storage_path': storagePath,
-    };
   }
 }

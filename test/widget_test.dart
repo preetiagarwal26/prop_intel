@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prop_intel/core/utils/address_normalizer.dart';
+import 'package:prop_intel/data/models/document_classification.dart';
 import 'package:prop_intel/services/property_matching_service.dart';
-import 'package:prop_intel/data/models/lease_extraction.dart';
 import 'package:prop_intel/data/models/property.dart';
 import 'package:prop_intel/services/pdf_extraction_service.dart';
 
@@ -16,7 +16,7 @@ void main() {
   });
 
   test('property matcher finds exact normalized match', () {
-    const extraction = LeaseExtraction(
+    const hint = PropertyAddressHint(
       propertyAddress: '123 Main Street',
       city: 'Austin',
       state: 'TX',
@@ -37,7 +37,7 @@ void main() {
       ),
     ];
 
-    final result = PropertyMatchingService().findMatch(extraction, properties);
+    final result = PropertyMatchingService().findMatch(hint, properties);
 
     expect(result.isNewProperty, isFalse);
     expect(result.property?.id, 'p1');
