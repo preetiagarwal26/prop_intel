@@ -9,6 +9,8 @@ import '../../core/providers/app_providers.dart';
 import '../../data/models/document_upload_draft.dart';
 import '../../data/models/lease.dart';
 import '../../data/models/property.dart';
+import '../shared/document_intelligence_panel.dart';
+import '../shared/document_metadata_fields.dart';
 import '../shared/document_type_field.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
@@ -74,6 +76,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     });
 
     final repository = ref.read(supabaseRepositoryProvider);
+    final classification = _draft.classification;
 
     try {
       final Property property;
@@ -121,23 +124,44 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         leaseId = lease.id;
       }
 
-      await repository.updateDocument(
+      final savedDoc = await repository.updateDocument(
         documentId: _draft.documentId,
         propertyId: property.id,
         leaseId: leaseId,
         documentType: _draft.documentType,
         classificationConfidence: _draft.savedClassificationConfidence,
         extractedMetadata: _draft.extractedMetadata,
+        summary: _draft.isManualClassification ? null : classification.summary,
+        keyPoints: _draft.isManualClassification ? const [] : classification.keyPoints,
+        flags: _draft.isManualClassification ? const [] : classification.flags,
+      );
+
+      final actionDrafts = ref.read(actionItemGeneratorServiceProvider).generate(
+            property: property,
+            document: savedDoc,
+            documentType: _draft.documentType,
+            metadata: _draft.extractedMetadata,
+            flags: _draft.isManualClassification ? const [] : classification.flags,
+          );
+      await repository.replaceActionItemsForDocument(
+        documentId: savedDoc.id,
+        drafts: actionDrafts,
       );
 
       ref.invalidate(portfolioProvider);
+      ref.invalidate(attentionProvider);
       ref.invalidate(propertyDetailProvider(property.id));
+      ref.invalidate(
+        documentDetailProvider(
+          DocumentDetailKey(propertyId: property.id, documentId: savedDoc.id),
+        ),
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Document saved successfully.')),
         );
-        context.go('/property/${property.id}');
+        context.go('/property/${property.id}/document/${savedDoc.id}');
       }
     } on AppException catch (e) {
       setState(() => _error = e.message);
@@ -157,6 +181,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     final matchLabel = _draft.createNewProperty
         ? 'New property'
         : 'Existing property (${(_draft.matchResult.confidence * 100).toStringAsFixed(0)}% match)';
+    final classification = _draft.classification;
 
     return Scaffold(
       appBar: AppBar(
@@ -191,7 +216,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-            ] else if (_draft.classification.isLowConfidence) ...[
+            ] else if (classification.isLowConfidence) ...[
               Card(
                 color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.5),
                 child: Padding(
@@ -227,13 +252,17 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 avatar: Icon(iconForDocumentType(_draft.documentType)),
                 label: Text(
                   'AI confidence: '
-                  '${(_draft.classification.confidence * 100).toStringAsFixed(0)}%',
+                  '${(classification.confidence * 100).toStringAsFixed(0)}%',
                 ),
               ),
-            if (_draft.classification.summary.isNotEmpty &&
-                !_draft.isManualClassification) ...[
-              const SizedBox(height: 8),
-              Text(_draft.classification.summary),
+            if (!_draft.isManualClassification) ...[
+              const SizedBox(height: 16),
+              DocumentIntelligencePanel(
+                summary: classification.summary,
+                keyPoints: classification.keyPoints,
+                flags: classification.flags,
+                compact: true,
+              ),
             ],
             const SizedBox(height: 16),
             Chip(
@@ -258,18 +287,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   ? null
                   : (value) => setState(() => _draft.createNewProperty = value),
             ),
-            if (_draft.extractedMetadata.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Text('Extracted Details', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
-              ..._draft.extractedMetadata.entries.map(
-                (entry) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(_formatKey(entry.key)),
-                  subtitle: Text(entry.value?.toString() ?? ''),
-                ),
-              ),
-            ],
+            const SizedBox(height: 24),
+            Text('Document details', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            DocumentMetadataFields(
+              documentType: _draft.documentType,
+              metadata: _draft.extractedMetadata,
+              enabled: !_isSaving,
+              onChanged: (metadata) => setState(() => _draft.extractedMetadata = metadata),
+            ),
             const SizedBox(height: 8),
             Text('File: ${_draft.fileName}'),
             if (_error != null) ...[
@@ -319,12 +345,5 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             : null,
       ),
     );
-  }
-
-  String _formatKey(String key) {
-    return key
-        .split('_')
-        .map((part) => part.isEmpty ? part : '${part[0].toUpperCase()}${part.substring(1)}')
-        .join(' ');
   }
 }

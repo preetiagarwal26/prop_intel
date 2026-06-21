@@ -1,4 +1,5 @@
 import '../../core/utils/address_normalizer.dart';
+import 'occupancy_status.dart';
 
 class Property {
   const Property({
@@ -10,6 +11,7 @@ class Property {
     required this.zipCode,
     this.unitNumber,
     this.normalizedAddress,
+    this.occupancyStatus,
     this.createdAt,
   });
 
@@ -21,6 +23,7 @@ class Property {
   final String zipCode;
   final String? unitNumber;
   final String? normalizedAddress;
+  final OccupancyStatus? occupancyStatus;
   final DateTime? createdAt;
 
   factory Property.fromJson(Map<String, dynamic> json) {
@@ -33,6 +36,7 @@ class Property {
       zipCode: json['zip_code'] as String? ?? '',
       unitNumber: json['unit_number'] as String?,
       normalizedAddress: json['normalized_address'] as String?,
+      occupancyStatus: OccupancyStatus.fromJson(json['occupancy_status'] as String?),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -51,7 +55,10 @@ class Property {
   }
 
   Map<String, dynamic> toUpdateJson() {
-    return toInsertJson();
+    return {
+      ...toInsertJson(),
+      if (occupancyStatus != null) 'occupancy_status': occupancyStatus!.value,
+    };
   }
 
   String get displayAddress {
@@ -67,6 +74,8 @@ class Property {
     String? state,
     String? zipCode,
     String? unitNumber,
+    OccupancyStatus? occupancyStatus,
+    bool clearOccupancyStatus = false,
   }) {
     return Property(
       id: id,
@@ -77,6 +86,7 @@ class Property {
       zipCode: zipCode ?? this.zipCode,
       unitNumber: unitNumber ?? this.unitNumber,
       normalizedAddress: normalizedAddress,
+      occupancyStatus: clearOccupancyStatus ? null : (occupancyStatus ?? this.occupancyStatus),
       createdAt: createdAt,
     );
   }

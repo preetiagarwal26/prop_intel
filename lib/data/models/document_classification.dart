@@ -1,3 +1,4 @@
+import 'document_flag.dart';
 import 'document_type.dart';
 
 class PropertyAddressHint {
@@ -26,6 +27,8 @@ class DocumentClassification {
     this.zipCode = '',
     this.unitNumber = '',
     this.summary = '',
+    this.keyPoints = const [],
+    this.flags = const [],
     this.extractedMetadata = const {},
   });
 
@@ -37,6 +40,8 @@ class DocumentClassification {
   final String zipCode;
   final String unitNumber;
   final String summary;
+  final List<String> keyPoints;
+  final List<DocumentFlag> flags;
   final Map<String, dynamic> extractedMetadata;
 
   PropertyAddressHint get addressHint => PropertyAddressHint(
@@ -49,6 +54,9 @@ class DocumentClassification {
 
   factory DocumentClassification.fromJson(Map<String, dynamic> json) {
     final metadata = json['extracted_metadata'];
+    final points = json['key_points'];
+    final flagsJson = json['flags'];
+
     return DocumentClassification(
       documentType: DocumentType.fromValue(json['document_type'] as String?),
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0,
@@ -58,6 +66,15 @@ class DocumentClassification {
       zipCode: _stringValue(json['zip_code']),
       unitNumber: _stringValue(json['unit_number']),
       summary: _stringValue(json['summary']),
+      keyPoints: points is List
+          ? points.map((e) => e.toString()).where((e) => e.isNotEmpty).toList()
+          : const [],
+      flags: flagsJson is List
+          ? flagsJson
+              .whereType<Map<String, dynamic>>()
+              .map(DocumentFlag.fromJson)
+              .toList()
+          : const [],
       extractedMetadata: metadata is Map<String, dynamic>
           ? Map<String, dynamic>.from(metadata)
           : const {},
@@ -74,6 +91,8 @@ class DocumentClassification {
       'zip_code': zipCode,
       'unit_number': unitNumber,
       'summary': summary,
+      'key_points': keyPoints,
+      'flags': flags.map((f) => f.toJson()).toList(),
       'extracted_metadata': extractedMetadata,
     };
   }
@@ -85,14 +104,13 @@ class DocumentClassification {
     return value.toString();
   }
 
-  /// Used when automatic classification fails or is skipped.
   factory DocumentClassification.manual({
     DocumentType documentType = DocumentType.other,
   }) {
     return DocumentClassification(
       documentType: documentType,
       confidence: 0,
-      summary: 'Document type selected manually.',
+      summary: 'Document type selected manually. No AI summary available.',
     );
   }
 

@@ -1,3 +1,4 @@
+import 'document_flag.dart';
 import 'document_type.dart';
 
 class Document {
@@ -11,6 +12,9 @@ class Document {
     this.documentType,
     this.classificationConfidence,
     this.extractedMetadata = const {},
+    this.summary,
+    this.keyPoints = const [],
+    this.flags = const [],
   });
 
   final String id;
@@ -22,9 +26,15 @@ class Document {
   final DocumentType? documentType;
   final double? classificationConfidence;
   final Map<String, dynamic> extractedMetadata;
+  final String? summary;
+  final List<String> keyPoints;
+  final List<DocumentFlag> flags;
 
   factory Document.fromJson(Map<String, dynamic> json) {
     final metadata = json['extracted_metadata'];
+    final points = json['key_points'];
+    final flagsJson = json['flags'];
+
     return Document(
       id: json['id'] as String,
       propertyId: json['property_id'] as String?,
@@ -42,6 +52,16 @@ class Document {
       extractedMetadata: metadata is Map<String, dynamic>
           ? Map<String, dynamic>.from(metadata)
           : const {},
+      summary: json['summary'] as String?,
+      keyPoints: points is List
+          ? points.map((e) => e.toString()).where((e) => e.isNotEmpty).toList()
+          : const [],
+      flags: flagsJson is List
+          ? flagsJson
+              .whereType<Map<String, dynamic>>()
+              .map(DocumentFlag.fromJson)
+              .toList()
+          : const [],
     );
   }
 }

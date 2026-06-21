@@ -26,6 +26,14 @@ const responseSchema = {
   zip_code: "",
   unit_number: "",
   summary: "",
+  key_points: ["Key fact about the document"],
+  flags: [
+    {
+      severity: "warning",
+      title: "Short flag title",
+      description: "Why this matters to the property owner",
+    },
+  ],
   extracted_metadata: {},
 };
 
@@ -44,7 +52,9 @@ Rules:
 * document_type must be one of the allowed values
 * confidence is 0.0 to 1.0
 * property address fields: extract when present; use empty string if missing
-* summary: one sentence describing the document
+* summary: 2-3 sentence overview for a property owner
+* key_points: array of 3-7 concise bullet strings with the most important facts (dates, amounts, parties, obligations)
+* flags: array of items the owner should act on or watch — each with severity (info|warning|critical), title, description. Use warning/critical for expiring leases, missing insurance, unfavorable clauses, overdue bills. Empty array if none.
 * extracted_metadata: type-specific fields as JSON object:
   - lease: lease_start_date, lease_end_date, monthly_rent, security_deposit, late_fee, tenant_names (array), landlord_name
   - deed: grantor, grantee, recording_date, parcel_number
@@ -102,6 +112,12 @@ function validateResponse(data: Record<string, unknown>) {
     Array.isArray(data.extracted_metadata)
   ) {
     throw new Error("extracted_metadata must be an object");
+  }
+  if (!Array.isArray(data.key_points)) {
+    throw new Error("key_points must be an array");
+  }
+  if (!Array.isArray(data.flags)) {
+    throw new Error("flags must be an array");
   }
 }
 

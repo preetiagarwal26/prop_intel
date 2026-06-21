@@ -1,0 +1,565 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --gold:#C9A84C;--gold-light:#F0D78A;--gold-dark:#8B6E2A;
+    --ink:#1A1A2E;--ink2:#2D2D44;--surface:#F7F5F0;--surface2:#EDEAE3;
+    --success:#2A7A4B;--warn:#B85C1A;--danger:#8B2020;
+    --text1:var(--ink);--text2:#5A5870;--text3:#9896A4;
+    --radius:10px;--radius-lg:16px;
+    font-family:'DM Sans',sans-serif;
+  }
+  body{background:var(--surface);color:var(--text1);font-size:14px;line-height:1.6}
+  h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400}
+
+  .app{display:flex;height:100vh;min-height:700px;overflow:hidden}
+
+  .sidebar{width:220px;min-width:220px;background:var(--ink);display:flex;flex-direction:column;padding:24px 0}
+  .logo{padding:0 20px 28px;border-bottom:0.5px solid rgba(255,255,255,0.08)}
+  .logo h1{color:#fff;font-size:18px;line-height:1.2}
+  .logo span{color:var(--gold);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Sans',sans-serif}
+  .nav{padding:20px 12px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.55);font-size:13px;transition:all .15s;margin-bottom:2px}
+  .nav-item:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.85)}
+  .nav-item.active{background:rgba(201,168,76,0.15);color:var(--gold-light)}
+  .nav-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .nav-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+  .nav-section{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:14px 10px 6px;font-weight:500}
+  .sidebar-bottom{padding:16px 20px;border-top:0.5px solid rgba(255,255,255,0.08)}
+  .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dark),var(--gold));display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:12px;font-weight:500}
+  .user-row{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.75);font-size:13px}
+
+  .main{flex:1;overflow-y:auto;background:var(--surface)}
+
+  .topbar{padding:20px 28px 0;display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+  .page-title{font-size:26px;color:var(--ink)}
+  .page-sub{font-size:13px;color:var(--text3);margin-top:2px}
+  .topbar-right{display:flex;align-items:center;gap:10px}
+  .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+  .btn-gold{background:var(--gold);color:var(--ink)}
+  .btn-outline{background:transparent;border:0.5px solid var(--text3);color:var(--text2)}
+  .notif-btn{width:36px;height:36px;border-radius:8px;background:var(--surface2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}
+  .notif-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;position:absolute;top:8px;right:8px;border:1.5px solid var(--surface)}
+
+  .content{padding:20px 28px 40px}
+  .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+  .metric-card{background:var(--surface2);border-radius:var(--radius);padding:16px;border:0.5px solid rgba(26,26,46,0.08)}
+  .metric-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-weight:500}
+  .metric-value{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text1);line-height:1}
+  .metric-sub{font-size:12px;color:var(--text3);margin-top:4px}
+  .metric-up{color:var(--success);font-size:12px;margin-top:4px;font-weight:500}
+  .metric-down{color:var(--danger);font-size:12px;margin-top:4px;font-weight:500}
+
+  .two-col{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:16px}
+  .card{background:var(--color-background-primary);border-radius:var(--radius-lg);border:0.5px solid var(--color-border-tertiary);padding:20px}
+  .card-title{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px}
+  .card-sub{font-size:12px;color:var(--text3);margin-bottom:16px}
+
+  .property-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+  .property-row:last-child{border-bottom:none}
+  .prop-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+  .prop-info{flex:1;min-width:0}
+  .prop-name{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prop-loc{font-size:12px;color:var(--text3)}
+  .prop-yield{text-align:right}
+  .yield-val{font-weight:500;font-size:14px;color:var(--success)}
+  .yield-label{font-size:11px;color:var(--text3)}
+  .status-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+  .pill-green{background:#EAF3DE;color:#3B6D11}
+  .pill-amber{background:#FAEEDA;color:#854F0B}
+  .pill-red{background:#FCEBEB;color:#A32D2D}
+
+  .notif-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+  .notif-item:last-child{border-bottom:none}
+  .notif-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  .ni-gold{background:#FAEEDA}
+  .ni-red{background:#FCEBEB}
+  .ni-green{background:#EAF3DE}
+  .notif-text{flex:1}
+  .notif-title{font-size:13px;font-weight:500}
+  .notif-desc{font-size:12px;color:var(--text3)}
+
+  .tabs{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px;margin-bottom:20px}
+  .tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text3);transition:all .15s;border:none;background:transparent;font-family:'DM Sans',sans-serif}
+  .tab.active{background:var(--color-background-primary);color:var(--text1);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+
+  .advice-box{border-radius:var(--radius);padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start}
+  .ab-good{background:#EAF3DE;border-left:3px solid #3B6D11}
+  .ab-caution{background:#FAEEDA;border-left:3px solid #854F0B}
+  .ab-bad{background:#FCEBEB;border-left:3px solid #A32D2D}
+  .ab-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+  .ab-content{}
+  .ab-title{font-weight:500;font-size:13px}
+  .ab-desc{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.5}
+  .score-ring{width:80px;height:80px;flex-shrink:0}
+
+  .score-area{display:flex;align-items:center;gap:16px;padding:16px;background:var(--surface2);border-radius:var(--radius);margin-bottom:16px}
+  .score-num{font-family:'DM Serif Display',serif;font-size:36px;color:var(--success)}
+  .score-label{font-size:12px;color:var(--text3);margin-top:2px}
+  .score-max{font-size:14px;color:var(--text3)}
+
+  .factor-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .factor-label{font-size:12px;color:var(--text2);width:100px;flex-shrink:0}
+  .factor-bar-bg{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+  .factor-bar{height:100%;border-radius:3px;transition:width .5s}
+  .factor-val{font-size:12px;color:var(--text3);width:28px;text-align:right;flex-shrink:0}
+
+  .rent-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+  .rent-row:last-child{border-bottom:none}
+  .rent-date{min-width:50px}
+  .rent-day{font-weight:500;font-size:18px;font-family:'DM Serif Display',serif}
+  .rent-month{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+  .rent-info{flex:1}
+  .rent-addr{font-size:13px;font-weight:500}
+  .rent-tenant{font-size:12px;color:var(--text3)}
+  .rent-amount{font-weight:500;font-size:14px}
+
+  .doc-area{padding:20px 0}
+  .doc-upload{border:1.5px dashed var(--color-border-secondary);border-radius:var(--radius-lg);padding:32px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surface2)}
+  .doc-upload:hover{border-color:var(--gold);background:rgba(201,168,76,0.04)}
+  .doc-icon{font-size:32px;margin-bottom:8px}
+  .doc-hint{font-size:13px;color:var(--text3);margin-top:4px}
+  .ai-response{margin-top:16px;padding:16px;background:var(--color-background-primary);border-radius:var(--radius);border:0.5px solid var(--color-border-tertiary)}
+  .ai-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--gold-dark);font-weight:500;margin-bottom:8px;padding:3px 8px;background:#FAEEDA;border-radius:20px}
+  .ai-text{font-size:13px;color:var(--text2);line-height:1.7}
+  .ai-point{display:flex;gap:8px;margin-top:8px;align-items:flex-start}
+  .ai-bullet{width:5px;height:5px;border-radius:50%;background:var(--gold);margin-top:6px;flex-shrink:0}
+
+  .mini-chart{height:80px;display:flex;align-items:flex-end;gap:4px;margin-top:8px}
+  .bar{flex:1;border-radius:3px 3px 0 0;background:var(--gold);opacity:0.7;transition:opacity .15s}
+  .bar:hover{opacity:1}
+
+  .page-section{display:none}
+  .page-section.visible{display:block}
+
+  svg.donut{width:80px;height:80px}
+</style>
+
+<h2 class="sr-only">PropVault — Individual investor portfolio management platform prototype</h2>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <h1>PropVault</h1>
+      <span>Investor Platform</span>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Portfolio</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <div class="nav-icon">⊞</div> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('properties')">
+        <div class="nav-icon">⌂</div> Properties
+      </div>
+      <div class="nav-item" onclick="showPage('rentals')">
+        <div class="nav-icon">◷</div> Rent Schedule
+        <span style="margin-left:auto;background:#E24B4A;color:#fff;border-radius:20px;font-size:10px;padding:1px 6px">3</span>
+      </div>
+      <div class="nav-section">Tools</div>
+      <div class="nav-item" onclick="showPage('advisor')">
+        <div class="nav-icon">◈</div> Investment Advisor
+      </div>
+      <div class="nav-item" onclick="showPage('docs')">
+        <div class="nav-icon">☷</div> Legal Docs AI
+      </div>
+      <div class="nav-section">Coming Soon</div>
+      <div class="nav-item" style="opacity:0.4;cursor:default">
+        <div class="nav-icon">∿</div> Mutual Funds
+      </div>
+      <div class="nav-item" style="opacity:0.4;cursor:default">
+        <div class="nav-icon">◉</div> Stocks & ETFs
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-row">
+        <div class="avatar">JD</div>
+        <div>
+          <div style="color:rgba(255,255,255,0.85);font-size:13px">James Denton</div>
+          <div style="color:rgba(255,255,255,0.35);font-size:11px">Pro Plan</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div id="page-dashboard" class="page-section visible">
+      <div class="topbar">
+        <div>
+          <h2 class="page-title">Portfolio Overview</h2>
+          <div class="page-sub">Wednesday, April 8 2026 · 5 properties</div>
+        </div>
+        <div class="topbar-right">
+          <button class="notif-btn" onclick="showPage('rentals')"><div class="notif-dot"></div>🔔</button>
+          <button class="btn btn-gold" onclick="showPage('advisor')">+ Add Investment</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Total Portfolio</div>
+            <div class="metric-value">$2.4M</div>
+            <div class="metric-up">▲ 12.4% YTD</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Monthly Income</div>
+            <div class="metric-value">$11.8K</div>
+            <div class="metric-up">▲ $340 vs last mo.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Avg Yield</div>
+            <div class="metric-value">5.9%</div>
+            <div class="metric-sub">Across 5 properties</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Occupancy Rate</div>
+            <div class="metric-value">94%</div>
+            <div class="metric-down">1 unit vacant</div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Properties</div>
+            <div class="card-sub">Current portfolio · yield & status</div>
+            <div class="property-row">
+              <div class="prop-thumb">🏢</div>
+              <div class="prop-info"><div class="prop-name">Skyline Apartments, Unit 4B</div><div class="prop-loc">Downtown Chicago, IL</div></div>
+              <div class="prop-yield"><div class="yield-val">6.8%</div><div class="yield-label">yield</div></div>
+              <span class="status-pill pill-green">Rented</span>
+            </div>
+            <div class="property-row">
+              <div class="prop-thumb">🏠</div>
+              <div class="prop-info"><div class="prop-name">Westlake Single Family</div><div class="prop-loc">Austin, TX</div></div>
+              <div class="prop-yield"><div class="yield-val">5.2%</div><div class="yield-label">yield</div></div>
+              <span class="status-pill pill-green">Rented</span>
+            </div>
+            <div class="property-row">
+              <div class="prop-thumb">🏬</div>
+              <div class="prop-info"><div class="prop-name">Harbor Commerce Unit</div><div class="prop-loc">Miami, FL</div></div>
+              <div class="prop-yield"><div class="yield-val">7.1%</div><div class="yield-label">yield</div></div>
+              <span class="status-pill pill-amber">Lease ending</span>
+            </div>
+            <div class="property-row">
+              <div class="prop-thumb">🏘</div>
+              <div class="prop-info"><div class="prop-name">Pinewood Duplex</div><div class="prop-loc">Denver, CO</div></div>
+              <div class="prop-yield"><div class="yield-val">4.9%</div><div class="yield-label">yield</div></div>
+              <span class="status-pill pill-red">Vacant</span>
+            </div>
+            <div class="property-row">
+              <div class="prop-thumb">🏗</div>
+              <div class="prop-info"><div class="prop-name">Eastside New Build</div><div class="prop-loc">Seattle, WA</div></div>
+              <div class="prop-yield"><div class="yield-val">5.5%</div><div class="yield-label">yield</div></div>
+              <span class="status-pill pill-green">Rented</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-title">Notifications</div>
+              <div class="card-sub">Upcoming & urgent</div>
+              <div class="notif-item">
+                <div class="notif-icon ni-red">🔴</div>
+                <div class="notif-text"><div class="notif-title">Rent overdue — Harbor Commerce</div><div class="notif-desc">2 days overdue · $3,200</div></div>
+              </div>
+              <div class="notif-item">
+                <div class="notif-icon ni-gold">🟡</div>
+                <div class="notif-text"><div class="notif-title">Lease ending in 14 days</div><div class="notif-desc">Harbor Commerce · Apr 22</div></div>
+              </div>
+              <div class="notif-item">
+                <div class="notif-icon ni-green">🟢</div>
+                <div class="notif-text"><div class="notif-title">Rent received — Skyline</div><div class="notif-desc">$2,400 deposited Apr 1</div></div>
+              </div>
+            </div>
+            <div class="card" style="flex:1">
+              <div class="card-title">Income trend</div>
+              <div class="card-sub">Monthly rental income</div>
+              <div class="mini-chart">
+                <div class="bar" style="height:52%"></div>
+                <div class="bar" style="height:58%"></div>
+                <div class="bar" style="height:55%"></div>
+                <div class="bar" style="height:62%"></div>
+                <div class="bar" style="height:60%"></div>
+                <div class="bar" style="height:68%"></div>
+                <div class="bar" style="height:71%"></div>
+                <div class="bar" style="height:74%"></div>
+                <div class="bar" style="height:70%"></div>
+                <div class="bar" style="height:78%"></div>
+                <div class="bar" style="height:82%"></div>
+                <div class="bar" style="height:100%;background:var(--gold)"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:4px"><span>May '25</span><span>Apr '26</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-advisor" class="page-section">
+      <div class="topbar">
+        <div>
+          <h2 class="page-title">Investment Advisor</h2>
+          <div class="page-sub">AI-powered property scoring algorithm</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="tabs">
+          <button class="tab active">Score a Property</button>
+          <button class="tab">Compare Listings</button>
+          <button class="tab">Market Insights</button>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Property details</div>
+            <div class="card-sub">Enter info to generate investment score</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+              <div><label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">Purchase Price</label><input type="text" value="$480,000" style="width:100%;padding:8px 10px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)"></div>
+              <div><label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">Expected Rent / mo</label><input type="text" value="$2,800" style="width:100%;padding:8px 10px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)"></div>
+              <div><label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">Location</label><input type="text" value="Austin, TX" style="width:100%;padding:8px 10px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)"></div>
+              <div><label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">Property Type</label>
+                <select style="width:100%;padding:8px 10px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)">
+                  <option>Single Family</option><option>Apartment</option><option>Commercial</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-gold" style="width:100%;padding:10px" onclick="showPage('advisor')">Run Algorithm ▶</button>
+
+            <div style="margin-top:20px;padding-top:16px;border-top:0.5px solid var(--color-border-tertiary)">
+              <div class="card-title" style="font-size:14px;margin-bottom:12px">Algorithm Factors</div>
+              <div class="factor-row"><span class="factor-label">Gross yield</span><div class="factor-bar-bg"><div class="factor-bar" style="width:70%;background:#3B6D11"></div></div><span class="factor-val">7.0%</span></div>
+              <div class="factor-row"><span class="factor-label">Cap rate</span><div class="factor-bar-bg"><div class="factor-bar" style="width:60%;background:#639922"></div></div><span class="factor-val">5.8%</span></div>
+              <div class="factor-row"><span class="factor-label">Market growth</span><div class="factor-bar-bg"><div class="factor-bar" style="width:80%;background:#C9A84C"></div></div><span class="factor-val">High</span></div>
+              <div class="factor-row"><span class="factor-label">Vacancy risk</span><div class="factor-bar-bg"><div class="factor-bar" style="width:25%;background:#E24B4A"></div></div><span class="factor-val">Low</span></div>
+              <div class="factor-row"><span class="factor-label">Cash-on-cash</span><div class="factor-bar-bg"><div class="factor-bar" style="width:55%;background:#639922"></div></div><span class="factor-val">5.5%</span></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="score-area">
+              <div>
+                <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Investment Score</div>
+                <div class="score-num">78<span class="score-max">/100</span></div>
+                <div class="score-label">Strong Buy</div>
+              </div>
+              <div style="flex:1;text-align:right">
+                <svg viewBox="0 0 80 80" style="width:72px;height:72px">
+                  <circle cx="40" cy="40" r="32" fill="none" stroke="var(--surface2)" stroke-width="8"/>
+                  <circle cx="40" cy="40" r="32" fill="none" stroke="#2A7A4B" stroke-width="8" stroke-dasharray="157" stroke-dashoffset="34" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+                  <text x="40" y="46" text-anchor="middle" font-size="14" font-weight="500" fill="#2A7A4B">78</text>
+                </svg>
+              </div>
+            </div>
+            <div class="card" style="flex:1">
+              <div class="advice-box ab-good">
+                <div class="ab-icon">✓</div>
+                <div class="ab-content"><div class="ab-title">Strong rental yield</div><div class="ab-desc">7% gross yield exceeds the Austin market average of 5.4%. Expected ROI payback in 14.3 years.</div></div>
+              </div>
+              <div class="advice-box ab-good">
+                <div class="ab-icon">✓</div>
+                <div class="ab-content"><div class="ab-title">High-growth market</div><div class="ab-desc">Austin ranks #3 in projected appreciation. Population influx driving demand upward.</div></div>
+              </div>
+              <div class="advice-box ab-caution">
+                <div class="ab-icon">⚠</div>
+                <div class="ab-content"><div class="ab-title">Interest rate sensitivity</div><div class="ab-desc">At current rates, monthly cash flow is +$340. A 1% rate rise reduces this to +$120.</div></div>
+              </div>
+              <div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2)">
+                <span style="font-weight:500">Verdict:</span> This property meets or exceeds 4 of 5 core criteria. <strong style="color:var(--success)">Recommended for acquisition</strong> subject to physical inspection.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-rentals" class="page-section">
+      <div class="topbar">
+        <div>
+          <h2 class="page-title">Rent Schedule</h2>
+          <div class="page-sub">Upcoming payments · lease tracking</div>
+        </div>
+        <div class="topbar-right"><button class="btn btn-outline">Export CSV</button></div>
+      </div>
+      <div class="content">
+        <div class="metrics-grid">
+          <div class="metric-card"><div class="metric-label">Due This Month</div><div class="metric-value">$11.8K</div><div class="metric-sub">5 properties</div></div>
+          <div class="metric-card"><div class="metric-label">Collected</div><div class="metric-value">$8.6K</div><div class="metric-up">▲ 73% of total</div></div>
+          <div class="metric-card"><div class="metric-label">Overdue</div><div class="metric-value">$3.2K</div><div class="metric-down">1 property</div></div>
+          <div class="metric-card"><div class="metric-label">Leases Expiring</div><div class="metric-value">2</div><div class="metric-sub">Next 30 days</div></div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">April 2026 — Rent schedule</div>
+            <div class="card-sub">Due dates and collection status</div>
+            <div class="rent-row">
+              <div class="rent-date"><div class="rent-day">01</div><div class="rent-month">Apr</div></div>
+              <div class="rent-info"><div class="rent-addr">Skyline Apartments 4B</div><div class="rent-tenant">Tenant: M. Okonkwo</div></div>
+              <div class="rent-amount" style="margin-right:12px">$2,400</div>
+              <span class="status-pill pill-green">Paid</span>
+            </div>
+            <div class="rent-row">
+              <div class="rent-date"><div class="rent-day">01</div><div class="rent-month">Apr</div></div>
+              <div class="rent-info"><div class="rent-addr">Westlake Single Family</div><div class="rent-tenant">Tenant: P. Sharma</div></div>
+              <div class="rent-amount" style="margin-right:12px">$2,800</div>
+              <span class="status-pill pill-green">Paid</span>
+            </div>
+            <div class="rent-row">
+              <div class="rent-date"><div class="rent-day">01</div><div class="rent-month">Apr</div></div>
+              <div class="rent-info"><div class="rent-addr">Eastside New Build</div><div class="rent-tenant">Tenant: L. Chen</div></div>
+              <div class="rent-amount" style="margin-right:12px">$3,400</div>
+              <span class="status-pill pill-green">Paid</span>
+            </div>
+            <div class="rent-row" style="background:rgba(234,75,74,0.04);border-radius:8px;padding:10px 8px">
+              <div class="rent-date"><div class="rent-day">06</div><div class="rent-month">Apr</div></div>
+              <div class="rent-info"><div class="rent-addr">Harbor Commerce Unit</div><div class="rent-tenant">Tenant: Rivera LLC</div></div>
+              <div class="rent-amount" style="margin-right:12px;color:var(--danger)">$3,200</div>
+              <span class="status-pill pill-red">2d Overdue</span>
+            </div>
+            <div class="rent-row">
+              <div class="rent-date"><div class="rent-day">—</div><div class="rent-month"></div></div>
+              <div class="rent-info"><div class="rent-addr">Pinewood Duplex</div><div class="rent-tenant" style="color:var(--danger)">Vacant — no tenant</div></div>
+              <div class="rent-amount" style="margin-right:12px;color:var(--text3)">—</div>
+              <span class="status-pill" style="background:var(--surface2);color:var(--text3)">Vacant</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Lease expirations</div>
+            <div class="card-sub">Upcoming renewals needed</div>
+            <div style="padding:14px;background:#FCEBEB;border-radius:10px;margin-bottom:12px">
+              <div style="font-weight:500;font-size:13px;color:#A32D2D">Harbor Commerce Unit</div>
+              <div style="font-size:12px;color:#A32D2D;margin-top:2px">Lease ends <strong>Apr 22, 2026</strong> — 14 days</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:6px">Rivera LLC · Monthly $3,200 · Commercial</div>
+              <button class="btn btn-outline" style="margin-top:10px;font-size:12px;padding:5px 12px">Send renewal notice</button>
+            </div>
+            <div style="padding:14px;background:#FAEEDA;border-radius:10px">
+              <div style="font-weight:500;font-size:13px;color:#854F0B">Westlake Single Family</div>
+              <div style="font-size:12px;color:#854F0B;margin-top:2px">Lease ends <strong>May 31, 2026</strong> — 53 days</div>
+              <div style="font-size:12px;color:var(--text2);margin-top:6px">P. Sharma · Monthly $2,800 · Residential</div>
+              <button class="btn btn-outline" style="margin-top:10px;font-size:12px;padding:5px 12px">Send renewal notice</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-docs" class="page-section">
+      <div class="topbar">
+        <div>
+          <h2 class="page-title">Legal Docs AI</h2>
+          <div class="page-sub">Summarize leases, contracts & title deeds with AI</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Upload document</div>
+            <div class="card-sub">PDF, DOCX or image supported</div>
+            <div class="doc-upload">
+              <div class="doc-icon">📄</div>
+              <div style="font-weight:500;font-size:13px">Drop your legal document here</div>
+              <div class="doc-hint">Lease agreements, purchase contracts, title deeds, HOA docs</div>
+            </div>
+            <div style="margin-top:16px">
+              <div class="card-title" style="font-size:14px;margin-bottom:10px">Recent documents</div>
+              <div class="property-row">
+                <div style="font-size:20px">📋</div>
+                <div class="prop-info"><div class="prop-name">Harbor_Commerce_Lease_2024.pdf</div><div class="prop-loc">Analyzed Apr 3, 2026</div></div>
+                <button class="btn btn-outline" style="font-size:11px;padding:4px 10px">View</button>
+              </div>
+              <div class="property-row">
+                <div style="font-size:20px">📜</div>
+                <div class="prop-info"><div class="prop-name">Skyline_Purchase_Contract.pdf</div><div class="prop-loc">Analyzed Feb 12, 2026</div></div>
+                <button class="btn btn-outline" style="font-size:11px;padding:4px 10px">View</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">AI Summary</div>
+            <div class="card-sub">Harbor Commerce Lease · Rivera LLC</div>
+            <div class="ai-response">
+              <div class="ai-tag">◈ AI Analysis</div>
+              <div class="ai-text">
+                <strong style="font-weight:500">Lease overview</strong> — Commercial lease, 2-year term. Key clauses identified:
+                <div class="ai-point"><div class="ai-bullet"></div><div>Rent: $3,200/mo with 3% annual escalation clause (Clause 4.2)</div></div>
+                <div class="ai-point"><div class="ai-bullet"></div><div>Termination: 60-day notice required by either party</div></div>
+                <div class="ai-point"><div class="ai-bullet"></div><div>Security deposit: $6,400 held in escrow (2 months)</div></div>
+                <div class="ai-point"><div class="ai-bullet"></div><div><strong style="font-weight:500;color:#854F0B">⚠ Flag:</strong> Subletting permitted without landlord consent — consider amending</div></div>
+                <div class="ai-point"><div class="ai-bullet"></div><div>Maintenance: Tenant responsible for interior; landlord covers structural</div></div>
+              </div>
+            </div>
+            <div style="margin-top:12px">
+              <input type="text" placeholder="Ask a question about this document..." style="width:100%;padding:8px 12px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-properties" class="page-section">
+      <div class="topbar">
+        <div><h2 class="page-title">My Properties</h2><div class="page-sub">5 assets · $2.4M total value</div></div>
+        <div class="topbar-right"><button class="btn btn-gold" onclick="showPage('advisor')">+ Evaluate New Property</button></div>
+      </div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+          <div class="card" style="cursor:pointer">
+            <div style="font-size:28px;margin-bottom:8px">🏢</div>
+            <div style="font-weight:500;font-size:14px">Skyline Apartments 4B</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Downtown Chicago, IL</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Value</span><span style="font-weight:500">$520,000</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Monthly rent</span><span style="font-weight:500">$2,400</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px"><span style="color:var(--text3)">Yield</span><span style="font-weight:500;color:var(--success)">6.8%</span></div>
+            <span class="status-pill pill-green">Rented · until Sep 2026</span>
+          </div>
+          <div class="card" style="cursor:pointer">
+            <div style="font-size:28px;margin-bottom:8px">🏠</div>
+            <div style="font-weight:500;font-size:14px">Westlake Single Family</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Austin, TX</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Value</span><span style="font-weight:500">$620,000</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Monthly rent</span><span style="font-weight:500">$2,800</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px"><span style="color:var(--text3)">Yield</span><span style="font-weight:500;color:var(--success)">5.2%</span></div>
+            <span class="status-pill pill-amber">Lease ending May 31</span>
+          </div>
+          <div class="card" style="cursor:pointer">
+            <div style="font-size:28px;margin-bottom:8px">🏬</div>
+            <div style="font-weight:500;font-size:14px">Harbor Commerce Unit</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Miami, FL</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Value</span><span style="font-weight:500">$480,000</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Monthly rent</span><span style="font-weight:500">$3,200</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px"><span style="color:var(--text3)">Yield</span><span style="font-weight:500;color:var(--success)">7.1%</span></div>
+            <span class="status-pill pill-red">Rent overdue · 2 days</span>
+          </div>
+          <div class="card" style="cursor:pointer">
+            <div style="font-size:28px;margin-bottom:8px">🏘</div>
+            <div style="font-weight:500;font-size:14px">Pinewood Duplex</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Denver, CO</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Value</span><span style="font-weight:500">$390,000</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Monthly rent</span><span style="font-weight:500">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px"><span style="color:var(--text3)">Yield</span><span style="font-weight:500;color:var(--danger)">Vacant</span></div>
+            <span class="status-pill pill-red">Vacant · needs tenant</span>
+          </div>
+          <div class="card" style="cursor:pointer">
+            <div style="font-size:28px;margin-bottom:8px">🏗</div>
+            <div style="font-weight:500;font-size:14px">Eastside New Build</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Seattle, WA</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Value</span><span style="font-weight:500">$390,000</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--text3)">Monthly rent</span><span style="font-weight:500">$3,400</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px"><span style="color:var(--text3)">Yield</span><span style="font-weight:500;color:var(--success)">5.5%</span></div>
+            <span class="status-pill pill-green">Rented · until Jan 2027</span>
+          </div>
+          <div class="card" style="cursor:pointer;border:1.5px dashed var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:200px" onclick="showPage('advisor')">
+            <div style="font-size:28px;margin-bottom:8px;opacity:0.4">+</div>
+            <div style="font-size:13px;color:var(--text3)">Add new property</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+function showPage(name){
+  document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('visible'));
+  document.getElementById('page-'+name).classList.add('visible');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.remove('active');
+    if(n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+name+"'")) n.classList.add('active');
+  });
+}
+</script>

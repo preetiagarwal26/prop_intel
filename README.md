@@ -19,7 +19,11 @@ lib/
   features/      # auth, upload, review, portfolio screens
 supabase/
   migrations/    # Postgres schema, RLS, storage policies
-  functions/     # extract-lease Edge Function (Gemini proxy)
+  functions/     # classify-document, extract-lease Edge Functions (Gemini proxy)
+docs/
+  UserStories/   # UserStory2.md — current sprint spec
+  PHASED_BUILD_PLAN.md
+  vision.html    # PropVault UI mockup
 ```
 
 ## Supabase setup
@@ -63,12 +67,14 @@ supabase/
 
 ## User flow
 
+See **[docs/UserStories/UserStory2.md](docs/UserStories/UserStory2.md)** for the full User Story 2 spec (document classification, AI summaries, property vault, manual classification fallback, and test checklist).
+
 1. Sign up / sign in (Supabase Auth)
-2. Open **Portfolio** and tap **Upload Lease**
-3. Select a text-based PDF lease (scanned/image PDFs without selectable text are not supported in Sprint 1)
-4. App uploads to Storage, extracts PDF text, calls Gemini via Edge Function, and matches properties
-5. Review extracted property + lease fields, edit as needed, and save
-6. Portfolio lists properties and linked leases
+2. Open **Portfolio** and tap **Upload Document**
+3. Select a text-based PDF (lease, insurance, utility, deed, etc.)
+4. App uploads to Storage, extracts PDF text, classifies with AI, and matches properties
+5. Review extracted fields, summary, and flags; edit as needed, and save
+6. Portfolio lists properties; tap a property to see all documents and leases
 
 ## Security notes
 
@@ -91,7 +97,7 @@ supabase/
 1. Open [Authentication → URL Configuration](https://supabase.com/dashboard/project/qdkopdghhltkabhkqamn/auth/url-configuration)
 2. Set **Site URL:** `http://localhost:3000`
 3. Add **Redirect URLs:**
-   - `http://localhost:3000/confirm.html`
+   - `http://localhost:PORT/auth/confirm` (use your Flutter web port)
    - `http://localhost:3000/**`
 4. Open [Authentication → Providers → Email](https://supabase.com/dashboard/project/qdkopdghhltkabhkqamn/auth/providers)
 5. Enable **Confirm email**
@@ -99,7 +105,7 @@ supabase/
 ### 2. App `.env`
 
 ```
-AUTH_REDIRECT_URL=http://localhost:3000/confirm.html
+AUTH_REDIRECT_URL=http://localhost:PORT/auth/confirm
 ```
 
 This must exactly match a URL in Supabase **Redirect URLs**.
@@ -119,9 +125,8 @@ This hosts `confirm.html` at `http://localhost:3000/confirm.html`.
 
 1. Run the app: `flutter run -d windows`
 2. **Create an account** → app shows “Check your inbox”
-3. Open the confirmation email → click the link
-4. Browser opens **Email confirmed** page
-5. Return to the app → **Sign In**
+3. Open the confirmation email → link opens **`/auth/confirm`** in the app (or browser for web build)
+4. **Email confirmed** page → return to app and **Sign In**
 
 ### Production
 
@@ -130,7 +135,7 @@ See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for full Vercel deployment step
 Quick summary:
 1. Push repo to GitHub
 2. Import in [Vercel](https://vercel.com/new)
-3. Set env vars: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `AUTH_REDIRECT_URL=https://your-app.vercel.app/confirm.html`
+3. Set env vars: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `AUTH_REDIRECT_URL=https://your-app.vercel.app/auth/confirm`
 4. Deploy
 5. Add Vercel URLs to Supabase **Authentication → URL Configuration**
 

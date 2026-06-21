@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../core/providers/app_providers.dart';
 import '../data/models/document_upload_draft.dart';
+import 'features/attention/attention_screen.dart';
 import 'features/auth/auth_confirm_screen.dart';
 import 'features/auth/check_email_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/signup_screen.dart';
-import 'features/portfolio/portfolio_screen.dart';
+import 'features/dashboard/dashboard_screen.dart';
+import 'features/properties/properties_screen.dart';
+import 'features/property/document_detail_screen.dart';
 import 'features/property/property_detail_screen.dart';
 import 'features/review/review_screen.dart';
 import 'features/upload/upload_document_screen.dart';
@@ -20,7 +23,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/portfolio',
+    initialLocation: '/dashboard',
     redirect: (context, state) {
       final session = authState.valueOrNull?.session;
       final isAuthRoute = state.matchedLocation == '/login' ||
@@ -32,7 +35,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
       if (session != null && isAuthRoute) {
-        return '/portfolio';
+        return '/dashboard';
+      }
+      if (state.matchedLocation == '/portfolio') {
+        return '/dashboard';
       }
       return null;
     },
@@ -57,8 +63,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AuthConfirmScreen(),
       ),
       GoRoute(
+        path: '/dashboard',
+        builder: (context, state) => const DashboardScreen(),
+      ),
+      GoRoute(
         path: '/portfolio',
-        builder: (context, state) => const PortfolioScreen(),
+        redirect: (context, state) => '/dashboard',
+      ),
+      GoRoute(
+        path: '/properties',
+        builder: (context, state) => const PropertiesScreen(),
+      ),
+      GoRoute(
+        path: '/attention',
+        builder: (context, state) => const AttentionScreen(),
       ),
       GoRoute(
         path: '/upload',
@@ -80,6 +98,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           final propertyId = state.pathParameters['id']!;
           return PropertyDetailScreen(propertyId: propertyId);
         },
+        routes: [
+          GoRoute(
+            path: 'document/:docId',
+            builder: (context, state) {
+              final propertyId = state.pathParameters['id']!;
+              final documentId = state.pathParameters['docId']!;
+              return DocumentDetailScreen(
+                propertyId: propertyId,
+                documentId: documentId,
+              );
+            },
+          ),
+        ],
       ),
     ],
   );
