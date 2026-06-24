@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/providers/app_providers.dart';
+import 'core/routing/go_router_refresh_stream.dart';
 import '../data/models/document_upload_draft.dart';
 import 'features/attention/attention_screen.dart';
 import 'features/auth/auth_confirm_screen.dart';
@@ -20,13 +21,16 @@ import 'features/upload/upload_document_screen.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final client = ref.watch(supabaseClientProvider);
+  final authRefresh = GoRouterRefreshStream(client.auth.onAuthStateChange);
+  ref.onDispose(authRefresh.dispose);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/dashboard',
+    refreshListenable: authRefresh,
     redirect: (context, state) {
-      final session = authState.valueOrNull?.session;
+      final session = client.auth.currentSession;
       final isAuthRoute = state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup' ||
           state.matchedLocation == '/signup/check-email' ||

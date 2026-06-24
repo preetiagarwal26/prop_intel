@@ -85,10 +85,15 @@ class AppShell extends ConsumerWidget {
   }
 
   Future<void> _signOut(BuildContext context, WidgetRef ref) async {
-    await ref.read(supabaseClientProvider).auth.signOut();
-    if (context.mounted) {
-      context.go('/login');
+    if (Scaffold.maybeOf(context)?.isDrawerOpen ?? false) {
+      Navigator.of(context).pop();
     }
+
+    // Invalidate before await — navigation after sign-out can dispose this widget.
+    ref.invalidate(portfolioProvider);
+    ref.invalidate(attentionProvider);
+
+    await ref.read(supabaseClientProvider).auth.signOut();
   }
 }
 
