@@ -13,6 +13,7 @@ import '../../services/lease_extraction_service.dart';
 import '../../services/pdf_extraction_service.dart';
 import '../../services/portfolio_metrics_service.dart';
 import '../../services/property_matching_service.dart';
+import '../../services/property_onboarding_service.dart';
 import '../../services/property_status_service.dart';
 
 final appConfigProvider = Provider<AppConfig>((ref) {
@@ -53,6 +54,10 @@ final propertyMatchingServiceProvider = Provider<PropertyMatchingService>((ref) 
 
 final actionItemGeneratorServiceProvider = Provider<ActionItemGeneratorService>((ref) {
   return ActionItemGeneratorService();
+});
+
+final propertyOnboardingServiceProvider = Provider<PropertyOnboardingService>((ref) {
+  return PropertyOnboardingService();
 });
 
 final propertyStatusServiceProvider = Provider<PropertyStatusService>((ref) {

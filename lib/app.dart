@@ -85,7 +85,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/upload',
-        builder: (context, state) => const UploadDocumentScreen(),
+        builder: (context, state) {
+          final onboarding = state.uri.queryParameters['onboarding'] == '1';
+          return UploadDocumentScreen(onboardingMode: onboarding);
+        },
       ),
       GoRoute(
         path: '/review',

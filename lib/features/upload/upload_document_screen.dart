@@ -26,7 +26,10 @@ enum UploadStep {
 }
 
 class UploadDocumentScreen extends ConsumerStatefulWidget {
-  const UploadDocumentScreen({super.key});
+  const UploadDocumentScreen({super.key, this.onboardingMode = false});
+
+  /// When true, guides the user to start with a settlement statement.
+  final bool onboardingMode;
 
   @override
   ConsumerState<UploadDocumentScreen> createState() => _UploadDocumentScreenState();
@@ -40,7 +43,14 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
 
   String? _documentId;
   String? _storagePath;
-  DocumentType _manualType = DocumentType.other;
+  late DocumentType _manualType;
+
+  @override
+  void initState() {
+    super.initState();
+    _manualType =
+        widget.onboardingMode ? DocumentType.settlement : DocumentType.other;
+  }
 
   Future<void> _pickAndProcess() async {
     setState(() {
@@ -222,7 +232,7 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
         _step == UploadStep.matching;
 
     return SecondaryScaffold(
-      title: 'Upload Document',
+      title: widget.onboardingMode ? 'Onboard New Property' : 'Upload Document',
       onBack: isProcessing ? () {} : () => context.go('/dashboard'),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -234,19 +244,23 @@ class _UploadDocumentScreenState extends ConsumerState<UploadDocumentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Upload a property document',
+                    widget.onboardingMode
+                        ? 'Start with your settlement statement'
+                        : 'Upload a property document',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'We classify leases, deeds, insurance, utility bills, and other documents, then link them to the matching property after your review.',
+                  Text(
+                    widget.onboardingMode
+                        ? 'Upload your closing settlement (HUD-1 / ALTA) first. We\'ll build the property profile and a checklist of mortgage, lease, insurance, and HOA documents to collect next.'
+                        : 'We classify leases, deeds, insurance, utility bills, and other documents, then link them to the matching property after your review.',
                   ),
                   if (_step != UploadStep.manualClassify) ...[
                     const SizedBox(height: 20),
                     FilledButton.icon(
                       onPressed: isProcessing ? null : _pickAndProcess,
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text('Select PDF'),
+                      icon: Icon(widget.onboardingMode ? Icons.receipt_long : Icons.upload_file),
+                      label: Text(widget.onboardingMode ? 'Select settlement PDF' : 'Select PDF'),
                     ),
                   ],
                   if (_selectedFile != null) ...[

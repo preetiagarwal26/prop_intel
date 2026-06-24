@@ -6,14 +6,32 @@ import '../../data/models/document_type.dart';
 
 /// Known metadata field keys per document type for review/edit UI.
 const documentMetadataFieldLabels = {
+  DocumentType.settlement: {
+    'property_type': 'Property type (single_family or multi_family)',
+    'bedrooms': 'Bedrooms',
+    'bathrooms': 'Bathrooms',
+    'has_mortgage': 'Has mortgage (true/false)',
+    'has_hoa': 'Has HOA (true/false)',
+    'has_renters': 'Has renters (true/false)',
+    'has_insurance': 'Has insurance (true/false)',
+    'insurance_company': 'Insurance company',
+  },
+  DocumentType.mortgage: {
+    'monthly_payment': 'Monthly payment',
+    'loan_start_date': 'Loan start date',
+    'loan_term_months': 'Loan term (months)',
+    'lender_name': 'Lender name',
+  },
   DocumentType.lease: {
     'lease_start_date': 'Lease start date',
     'lease_end_date': 'Lease end date',
     'monthly_rent': 'Monthly rent',
+    'rent_due_day': 'Rent due day of month (1-28)',
     'security_deposit': 'Security deposit',
     'late_fee': 'Late fee',
     'landlord_name': 'Landlord name',
     'tenant_names': 'Tenant names (comma-separated)',
+    'tenant_contact': 'Tenant contact (phone/email)',
   },
   DocumentType.deed: {
     'grantor': 'Grantor',
@@ -24,6 +42,7 @@ const documentMetadataFieldLabels = {
   DocumentType.insurance: {
     'carrier': 'Insurance carrier',
     'policy_number': 'Policy number',
+    'policy_start_date': 'Policy start date',
     'expiry_date': 'Expiry date',
     'coverage_amount': 'Coverage amount',
   },

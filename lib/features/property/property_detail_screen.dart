@@ -12,6 +12,7 @@ import '../../data/models/occupancy_status.dart';
 import '../shared/action_item_tile.dart';
 import '../shared/app_shell.dart';
 import '../shared/document_type_field.dart';
+import '../shared/onboarding_checklist_panel.dart';
 import '../shared/prop_vault_card.dart';
 import '../shared/property_status_pill.dart';
 
@@ -44,6 +45,16 @@ class PropertyDetailScreen extends ConsumerWidget {
       propertyId: propertyId,
       occupancyStatus: occupancyStatus,
     );
+    ref.invalidate(portfolioProvider);
+    ref.invalidate(propertyDetailProvider(propertyId));
+  }
+
+  Future<void> _completeOnboarding(WidgetRef ref) async {
+    final repository = ref.read(supabaseRepositoryProvider);
+    final onboarding = ref.read(propertyOnboardingServiceProvider);
+    final detail = await ref.read(propertyDetailProvider(propertyId).future);
+    final updated = onboarding.markOnboardingComplete(detail.property);
+    await repository.updateProperty(updated);
     ref.invalidate(portfolioProvider);
     ref.invalidate(propertyDetailProvider(propertyId));
   }
@@ -131,6 +142,11 @@ class PropertyDetailScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+              ),
+              OnboardingChecklistPanel(
+                property: detail.property,
+                onUploadNext: () => context.push('/upload'),
+                onComplete: () => _completeOnboarding(ref),
               ),
               if (detail.actionItems.isNotEmpty) ...[
                 const SizedBox(height: 24),

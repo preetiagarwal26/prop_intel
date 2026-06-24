@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/action_item.dart';
+import '../../data/models/onboarding_status.dart';
 import '../../data/repositories/supabase_repository.dart';
 import '../../services/portfolio_metrics_service.dart';
 import '../../services/property_status_service.dart';
@@ -53,7 +54,7 @@ class DashboardScreen extends ConsumerWidget {
             '$subtitleDate · ${entries.length} propert${entries.length == 1 ? 'y' : 'ies'}',
         orElse: () => subtitleDate,
       ),
-      actions: const [PropVaultTopActions()],
+      actions: const [PropVaultTopActions(showOnboardEntry: true)],
       body: portfolioAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -88,14 +89,29 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Upload your first document to create a property and document vault.',
+                      'Upload a settlement statement to create your first property profile and closing checklist.',
                       textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: () => context.push('/upload?onboarding=1'),
+                      icon: const Icon(Icons.receipt_long),
+                      label: const Text('Onboard new property'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => context.push('/upload'),
+                      child: const Text('Upload other document'),
                     ),
                   ],
                 ),
               ),
             );
           }
+
+          final onboardingEntries = entries
+              .where((e) => e.property.onboardingStatus == OnboardingStatus.inProgress)
+              .toList();
 
           final attentionItems = attentionAsync.valueOrNull ?? const [];
           final metrics = metricsService.compute(
@@ -111,6 +127,10 @@ class DashboardScreen extends ConsumerWidget {
               return ListView(
                 padding: EdgeInsets.zero,
                 children: [
+                  if (onboardingEntries.isNotEmpty) ...[
+                    _OnboardingPanel(entries: onboardingEntries),
+                    const SizedBox(height: 24),
+                  ],
                   _MetricsGrid(
                     wide: wide,
                     metrics: metrics,
@@ -183,6 +203,56 @@ class DashboardScreen extends ConsumerWidget {
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _OnboardingPanel extends StatelessWidget {
+  const _OnboardingPanel({required this.entries});
+
+  final List<PortfolioEntry> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    return PropVaultCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const PropVaultPanelHeader(
+            title: 'Closing onboarding',
+            subtitle: 'Properties still collecting closing documents',
+          ),
+          ...entries.map((entry) {
+            final property = entry.property;
+            final pending = property.onboardingChecklist.pendingItems;
+            final nextLabel = pending.isEmpty ? null : pending.first.label;
+
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(
+                backgroundColor: AppColors.gold.withValues(alpha: 0.15),
+                child: const Icon(Icons.receipt_long, color: AppColors.gold, size: 20),
+              ),
+              title: Text(property.displayAddress),
+              subtitle: Text(
+                nextLabel == null
+                    ? 'Checklist in progress'
+                    : 'Next: upload $nextLabel',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/property/${property.id}'),
+            );
+          }),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => context.push('/upload?onboarding=1'),
+              icon: const Icon(Icons.add),
+              label: const Text('Onboard another property'),
+            ),
+          ),
+        ],
       ),
     );
   }

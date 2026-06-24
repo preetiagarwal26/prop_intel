@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/errors/app_exception.dart';
 import '../../core/providers/app_providers.dart';
+import '../../data/models/onboarding_status.dart';
+import '../../data/models/document_type.dart';
 import '../../data/models/document_upload_draft.dart';
 import '../../data/models/lease.dart';
 import '../../data/models/property.dart';
@@ -76,10 +78,11 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     });
 
     final repository = ref.read(supabaseRepositoryProvider);
+    final onboardingService = ref.read(propertyOnboardingServiceProvider);
     final classification = _draft.classification;
 
     try {
-      final Property property;
+      Property property;
       if (_draft.createNewProperty || _draft.matchedProperty == null) {
         property = await repository.createProperty(
           Property(
@@ -103,6 +106,19 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           ),
         );
       }
+
+      if (_draft.documentType == DocumentType.settlement) {
+        property = onboardingService.applySettlement(
+          property: property,
+          metadata: _draft.extractedMetadata,
+        );
+      } else {
+        property = onboardingService.applyDocumentSaved(
+          property: property,
+          documentType: _draft.documentType,
+        );
+      }
+      property = await repository.updateProperty(property);
 
       String? leaseId;
       if (_draft.isLease) {
@@ -158,10 +174,18 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       );
 
       if (mounted) {
+        final pending = property.onboardingChecklist.pendingItems;
+        final message = pending.isEmpty
+            ? 'Document saved successfully.'
+            : 'Saved. Next: upload ${pending.first.label}.';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Document saved successfully.')),
+          SnackBar(content: Text(message)),
         );
-        context.go('/property/${property.id}/document/${savedDoc.id}');
+        if (property.onboardingStatus != OnboardingStatus.none && pending.isNotEmpty) {
+          context.go('/property/${property.id}');
+        } else {
+          context.go('/property/${property.id}/document/${savedDoc.id}');
+        }
       }
     } on AppException catch (e) {
       setState(() => _error = e.message);

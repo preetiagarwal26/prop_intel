@@ -1,25 +1,67 @@
-This user story is about simlpifying onboaring of a property based on documents provided.
+# User Story 1 — Property onboarding from closing documents
 
-An investor, after closing a property, will upload the documents typically available at the time of closing. The application will extract information from those documents to complete the onboarding of the new property. Documents provided at the time of closing will include: 
+**Epic:** Post-closing property setup  
+**Status:** Implemented (pending `supabase db push` + redeploy `classify-document`)  
+**Builds on:** [User Story 2](UserStory2.md), [User Story 3](UserStory3.md)
 
-- Settlement Statement - This is the final document issued by the title company at the time of purchase. 
-- Mortgage closing package - This is a set of documents that includes Closing Disclosure, Promissory note, Deed of trust, amortization schedule etc.
-- Condo / HOA documents
-- Leases (these may be a part of the closing packet or provided earlier during negotiations)
-- Insurance decleration
+---
 
+## User story
 
+**As an** investor who just closed on a property,  
+**I want to** upload closing documents (settlement, mortgage, HOA, lease, insurance) and have the app build a property profile and todo list,  
+**So that** onboarding is complete without manual Excel tracking.
 
+---
 
+## Acceptance criteria
 
-Information in the settlement statement that is pertinent for managing a rental property:
+- [x] Document types: **settlement**, **mortgage** (+ existing lease, insurance, hoa)
+- [x] Settlement extracts property profile (type, beds/baths) and flags (mortgage, HOA, renters, insurance)
+- [x] Settlement creates **onboarding checklist** of expected closing docs (no todos from settlement)
+- [x] Uploading expected doc types marks checklist items **received**
+- [x] Property detail shows **Closing onboarding** panel with progress + “Upload next”
+- [x] **Mortgage** doc → monthly mortgage payment action items (12-month horizon)
+- [x] **Lease** doc → monthly rent due action items + existing lease expiry rules
+- [x] **Insurance** doc → expiry reminder at **15 days** before (US1)
+- [x] User can **Mark onboarding complete** manually
 
+---
 
-| S.No. | Document                 | Information to be extracted                                                                                                                                                                                           | TODO items to be added                                                                                          |
-| ----- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| 1     | Settlement Statement     | - Property profile- Address- Single or multi-family- number of bedrooms and bathrooms in each unit- <To be added>- Presence of following:- Mortgage- HOA- Renters/ rental income- Name of the insurance company | No TODO to be added based on settlement statement but this tells whether to expect a mortgage, HOA, rental etc. |
-| 2     | Mortgage closing package | Monthly mortgage amount and duration (typically 30 years)                                                                                                                                                             | Create a TODO list for the first of each month until the end of the mortgage period                             |
-| 3     | Leases                   | - Name and contact information of renters- Rent amounts and due dates                                                                                                                                                | Create TODO entries for rent payments expected.                                                                 |
-| 4     | Insurance decleration    | - Name of the insurance company - Policy period                                                                                                                                                                       | Create a TODO entry 15 days before the policy is about to expire.                                               |
+## Technical notes
 
+### Migration
 
+`supabase/migrations/20250625000000_property_onboarding.sql`
+
+Adds to `properties`: `property_type`, `bedrooms`, `bathrooms`, `onboarding_status`, `onboarding_checklist`
+
+### Key files
+
+```
+lib/data/models/onboarding_checklist.dart
+lib/services/property_onboarding_service.dart
+lib/services/action_item_generator_service.dart  # rent_due, mortgage_due
+lib/features/shared/onboarding_checklist_panel.dart
+supabase/functions/classify-document/index.ts    # settlement + mortgage extraction
+```
+
+---
+
+## Deploy
+
+```powershell
+npx supabase db push
+npx supabase functions deploy classify-document
+flutter run -d chrome --web-port=3000
+```
+
+---
+
+## Test checklist
+
+- [ ] Upload settlement with has_mortgage=true → checklist shows mortgage expected
+- [ ] Upload mortgage → checklist marks received + mortgage due todos appear
+- [ ] Upload lease with monthly_rent → rent due todos appear
+- [ ] Upload insurance expiring in 15 days → insurance expiring todo
+- [ ] Mark onboarding complete on property detail

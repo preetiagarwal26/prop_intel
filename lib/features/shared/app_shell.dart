@@ -383,7 +383,10 @@ class _NavItem extends StatelessWidget {
 
 /// Top-bar action buttons styled like the vision mockup.
 class PropVaultTopActions extends ConsumerWidget {
-  const PropVaultTopActions({super.key});
+  const PropVaultTopActions({super.key, this.showOnboardEntry = false});
+
+  /// Shows an "Onboard property" shortcut (settlement-first upload flow).
+  final bool showOnboardEntry;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -398,6 +401,14 @@ class PropVaultTopActions extends ConsumerWidget {
           onTap: () => context.push('/attention'),
         ),
         const SizedBox(width: 10),
+        if (showOnboardEntry) ...[
+          OutlinedButton.icon(
+            onPressed: () => context.push('/upload?onboarding=1'),
+            icon: const Icon(Icons.receipt_long, size: 18),
+            label: const Text('Onboard property'),
+          ),
+          const SizedBox(width: 10),
+        ],
         FilledButton.icon(
           onPressed: () => context.push('/upload'),
           icon: const Icon(Icons.add, size: 18),

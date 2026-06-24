@@ -1,5 +1,8 @@
 import '../../core/utils/address_normalizer.dart';
 import 'occupancy_status.dart';
+import 'onboarding_checklist.dart';
+import 'onboarding_status.dart';
+import 'property_type.dart';
 
 class Property {
   const Property({
@@ -12,6 +15,11 @@ class Property {
     this.unitNumber,
     this.normalizedAddress,
     this.occupancyStatus,
+    this.propertyType,
+    this.bedrooms,
+    this.bathrooms,
+    this.onboardingStatus = OnboardingStatus.none,
+    this.onboardingChecklist = const OnboardingChecklist(),
     this.createdAt,
   });
 
@@ -24,6 +32,11 @@ class Property {
   final String? unitNumber;
   final String? normalizedAddress;
   final OccupancyStatus? occupancyStatus;
+  final PropertyType? propertyType;
+  final int? bedrooms;
+  final double? bathrooms;
+  final OnboardingStatus onboardingStatus;
+  final OnboardingChecklist onboardingChecklist;
   final DateTime? createdAt;
 
   factory Property.fromJson(Map<String, dynamic> json) {
@@ -37,10 +50,27 @@ class Property {
       unitNumber: json['unit_number'] as String?,
       normalizedAddress: json['normalized_address'] as String?,
       occupancyStatus: OccupancyStatus.fromJson(json['occupancy_status'] as String?),
+      propertyType: PropertyType.fromJson(json['property_type'] as String?),
+      bedrooms: json['bedrooms'] as int?,
+      bathrooms: _parseDouble(json['bathrooms']),
+      onboardingStatus: OnboardingStatus.fromJson(json['onboarding_status'] as String?),
+      onboardingChecklist: OnboardingChecklist.fromJson(
+        json['onboarding_checklist'] as Map<String, dynamic>?,
+      ),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
     );
+  }
+
+  static double? _parseDouble(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
+    return double.tryParse(value.toString());
   }
 
   Map<String, dynamic> toInsertJson() {
@@ -51,6 +81,11 @@ class Property {
       'zip_code': zipCode,
       'unit_number': unitNumber,
       'normalized_address': AddressNormalizer.normalize(propertyAddress),
+      if (propertyType != null) 'property_type': propertyType!.value,
+      if (bedrooms != null) 'bedrooms': bedrooms,
+      if (bathrooms != null) 'bathrooms': bathrooms,
+      'onboarding_status': onboardingStatus.value,
+      'onboarding_checklist': onboardingChecklist.toJson(),
     };
   }
 
@@ -76,6 +111,11 @@ class Property {
     String? unitNumber,
     OccupancyStatus? occupancyStatus,
     bool clearOccupancyStatus = false,
+    PropertyType? propertyType,
+    int? bedrooms,
+    double? bathrooms,
+    OnboardingStatus? onboardingStatus,
+    OnboardingChecklist? onboardingChecklist,
   }) {
     return Property(
       id: id,
@@ -87,6 +127,11 @@ class Property {
       unitNumber: unitNumber ?? this.unitNumber,
       normalizedAddress: normalizedAddress,
       occupancyStatus: clearOccupancyStatus ? null : (occupancyStatus ?? this.occupancyStatus),
+      propertyType: propertyType ?? this.propertyType,
+      bedrooms: bedrooms ?? this.bedrooms,
+      bathrooms: bathrooms ?? this.bathrooms,
+      onboardingStatus: onboardingStatus ?? this.onboardingStatus,
+      onboardingChecklist: onboardingChecklist ?? this.onboardingChecklist,
       createdAt: createdAt,
     );
   }

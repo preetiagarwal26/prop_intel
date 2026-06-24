@@ -39,6 +39,8 @@ class DocumentTypeField extends StatelessWidget {
 
 IconData iconForDocumentType(DocumentType type) {
   return switch (type) {
+    DocumentType.settlement => Icons.receipt_long,
+    DocumentType.mortgage => Icons.account_balance,
     DocumentType.lease => Icons.description,
     DocumentType.deed => Icons.gavel,
     DocumentType.insurance => Icons.shield,

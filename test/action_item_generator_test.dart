@@ -74,4 +74,70 @@ void main() {
     expect(drafts.first.itemType, 'ai_flag');
     expect(drafts.first.title, 'Subletting allowed without consent');
   });
+
+  test('generates rent due schedule for lease', () {
+    final today = DateTime(2026, 6, 14);
+    const property = Property(
+      id: 'p1',
+      userId: 'u1',
+      propertyAddress: '123 Main St',
+      city: 'Austin',
+      state: 'TX',
+      zipCode: '78701',
+    );
+
+    const document = Document(
+      id: 'd1',
+      fileName: 'lease.pdf',
+      storagePath: 'path/lease.pdf',
+    );
+
+    final drafts = ActionItemGeneratorService().generate(
+      property: property,
+      document: document,
+      documentType: DocumentType.lease,
+      metadata: const {
+        'monthly_rent': 2000,
+        'rent_due_day': 1,
+        'lease_end_date': '2027-06-01',
+      },
+      flags: const [],
+      now: today,
+    );
+
+    expect(drafts.any((d) => d.itemType == 'rent_due'), isTrue);
+  });
+
+  test('generates mortgage payment schedule', () {
+    final today = DateTime(2026, 6, 14);
+    const property = Property(
+      id: 'p1',
+      userId: 'u1',
+      propertyAddress: '123 Main St',
+      city: 'Austin',
+      state: 'TX',
+      zipCode: '78701',
+    );
+
+    const document = Document(
+      id: 'd2',
+      fileName: 'mortgage.pdf',
+      storagePath: 'path/mortgage.pdf',
+    );
+
+    final drafts = ActionItemGeneratorService().generate(
+      property: property,
+      document: document,
+      documentType: DocumentType.mortgage,
+      metadata: const {
+        'monthly_payment': 1500,
+        'loan_start_date': '2020-01-01',
+        'loan_term_months': 360,
+      },
+      flags: const [],
+      now: today,
+    );
+
+    expect(drafts.any((d) => d.itemType == 'mortgage_due'), isTrue);
+  });
 }

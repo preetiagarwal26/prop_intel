@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 const documentTypes = [
+  "settlement",
+  "mortgage",
   "lease",
   "deed",
   "insurance",
@@ -56,9 +58,11 @@ Rules:
 * key_points: array of 3-7 concise bullet strings with the most important facts (dates, amounts, parties, obligations)
 * flags: array of items the owner should act on or watch — each with severity (info|warning|critical), title, description. Use warning/critical for expiring leases, missing insurance, unfavorable clauses, overdue bills. Empty array if none.
 * extracted_metadata: type-specific fields as JSON object:
-  - lease: lease_start_date, lease_end_date, monthly_rent, security_deposit, late_fee, tenant_names (array), landlord_name
+  - settlement: property_type (single_family|multi_family), bedrooms, bathrooms, has_mortgage (boolean), has_hoa (boolean), has_renters (boolean), has_insurance (boolean), insurance_company
+  - mortgage: monthly_payment, loan_start_date, loan_term_months, lender_name
+  - lease: lease_start_date, lease_end_date, monthly_rent, rent_due_day (1-28), security_deposit, late_fee, tenant_names (array), tenant_contact, landlord_name
   - deed: grantor, grantee, recording_date, parcel_number
-  - insurance: carrier, policy_number, expiry_date, coverage_amount
+  - insurance: carrier, policy_number, expiry_date, policy_start_date, coverage_amount
   - utility: provider, account_number, amount_due, due_date, service_address
   - tax: tax_year, amount_due, due_date, parcel_number
   - hoa: association_name, amount_due, due_date

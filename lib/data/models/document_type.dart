@@ -1,4 +1,6 @@
 enum DocumentType {
+  settlement('settlement', 'Settlement Statement'),
+  mortgage('mortgage', 'Mortgage Closing'),
   lease('lease', 'Lease'),
   deed('deed', 'Deed'),
   insurance('insurance', 'Insurance'),
